@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .rotate-y-12 {
+    transform: rotateY(12deg);
+  }
+  
+  .-rotate-y-12 {
+    transform: rotateY(-12deg);
+  }
+  
+  .-rotate-x-3 {
+    transform: rotateX(-3deg);
+  }
+}
+
+/* Custom 3D transforms */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Smooth hover animations */
+.hover-lift:hover {
+  transform: translateY(-10px) scale(1.02);
+  transition: all 0.3s ease;
+}
+
+/* Enhanced backdrop blur */
+.backdrop-blur-enhanced {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
