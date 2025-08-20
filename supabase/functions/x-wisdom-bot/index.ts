@@ -44,6 +44,7 @@ async function callGrokAPI(prompt: string): Promise<string> {
           }
         ],
         model: 'grok-beta',
+        model: 'grok-4-0709',
         stream: false,
         temperature: 0.7
       })
