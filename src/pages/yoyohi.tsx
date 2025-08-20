@@ -11,7 +11,8 @@ import {
   BarChart3,
   Settings,
   MessageSquare,
-  Clock
+  Clock,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -26,9 +27,13 @@ function YoyoHi() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [botStatus, setBotStatus] = useState('idle');
   const [lastBotRun, setLastBotRun] = useState<string | null>(null);
+  const [showAllTruths, setShowAllTruths] = useState(false);
+  const [allTruths, setAllTruths] = useState<any[]>([]);
+  const [isLoadingAllTruths, setIsLoadingAllTruths] = useState(false);
 
   useEffect(() => {
     // Check authentication
@@ -54,34 +59,62 @@ function YoyoHi() {
   }, [user]);
 
   const loadDashboardData = async () => {
+    setIsLoadingStats(true);
     try {
+      console.log('🔄 Loading dashboard data...');
+      
       // Get total truths count
-      const { count: totalCount } = await supabase
+      const { count: totalCount, error: totalError } = await supabase
         .from('user_truths')
         .select('*', { count: 'exact', head: true });
 
+      if (totalError) {
+        console.error('Error fetching total count:', totalError);
+        throw totalError;
+      }
+
       // Get today's truths count
-      const today = new Date().toISOString().split('T')[0];
-      const { count: todayCount } = await supabase
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+      
+      const { count: todayCount, error: todayError } = await supabase
         .from('user_truths')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today}T23:59:59.999Z`);
+        .gte('created_at', todayStart.toISOString())
+        .lt('created_at', todayEnd.toISOString());
+
+      if (todayError) {
+        console.error('Error fetching today count:', todayError);
+        throw todayError;
+      }
 
       // Get this week's truths count
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { count: weeklyCount } = await supabase
+      const { count: weeklyCount, error: weeklyError } = await supabase
         .from('user_truths')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', weekAgo);
 
+      if (weeklyError) {
+        console.error('Error fetching weekly count:', weeklyError);
+        throw weeklyError;
+      }
+
       // Get recent truths
-      const { data: recentTruths } = await supabase
+      const { data: recentTruths, error: recentError } = await supabase
         .from('user_truths')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
+      if (recentError) {
+        console.error('Error fetching recent truths:', recentError);
+        throw recentError;
+      }
+
+      console.log('📊 Dashboard stats:', { totalCount, todayCount, weeklyCount, recentCount: recentTruths?.length });
+      
       setStats({
         totalTruths: totalCount || 0,
         todayTruths: todayCount || 0,
@@ -90,6 +123,30 @@ function YoyoHi() {
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  const loadAllTruths = async () => {
+    setIsLoadingAllTruths(true);
+    try {
+      console.log('🔄 Loading all truths...');
+      const { data: truths, error } = await supabase
+        .from('user_truths')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setAllTruths(truths || []);
+      setShowAllTruths(true);
+    } catch (error) {
+      console.error('Error loading all truths:', error);
+    } finally {
+      setIsLoadingAllTruths(false);
     }
   };
 
@@ -143,6 +200,96 @@ function YoyoHi() {
     return <Navigate to="/buddy" replace />;
   }
 
+  if (showAllTruths) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        {/* Header */}
+        <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center">
+                <button
+                  onClick={() => setShowAllTruths(false)}
+                  className="flex items-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-2xl transition-colors border border-white/10 mr-4"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Dashboard
+                </button>
+                <div>
+                  <h1 className="text-2xl font-light text-white">All Truths ({allTruths.length})</h1>
+                  <p className="text-white/60 text-sm">Complete list of user submissions</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-2xl transition-colors border border-white/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* All Truths List */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {isLoadingAllTruths ? (
+            <div className="text-center py-12">
+              <RefreshCw className="w-8 h-8 animate-spin text-white/60 mx-auto mb-4" />
+              <p className="text-white/60">Loading all truths...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {allTruths.map((truth, index) => (
+                <div key={truth.id} className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-white/10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center mr-4">
+                        <span className="text-white text-sm font-medium">@</span>
+                      </div>
+                      <div>
+                        <span className="text-white font-medium text-lg">{truth.x_username}</span>
+                        <div className="flex items-center text-white/40 text-sm mt-1">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {new Date(truth.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-white/40 text-sm">
+                      #{allTruths.length - index}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <p className="text-white/80 text-xl font-light mb-3">"{truth.generated_truth}"</p>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                      <p className="text-white/60 mb-2">Q1: {truth.first_question}</p>
+                      <p className="text-white/90">A1: {truth.first_answer}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                      <p className="text-white/60 mb-2">Q2: {truth.second_question}</p>
+                      <p className="text-white/90">A2: {truth.second_answer}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {allTruths.length === 0 && (
+                <div className="text-center py-12">
+                  <MessageSquare className="w-16 h-16 mx-auto mb-4 text-white/20" />
+                  <p className="text-white/40 text-lg">No truths found</p>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
@@ -172,7 +319,9 @@ function YoyoHi() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-sm">Total Truths</p>
-                <p className="text-3xl font-light text-white">{stats?.totalTruths || 0}</p>
+                <p className="text-3xl font-light text-white">
+                  {isLoadingStats ? '...' : (stats?.totalTruths || 0)}
+                </p>
               </div>
               <Database className="w-8 h-8 text-white/40" />
             </div>
@@ -182,7 +331,9 @@ function YoyoHi() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-sm">Today</p>
-                <p className="text-3xl font-light text-white">{stats?.todayTruths || 0}</p>
+                <p className="text-3xl font-light text-white">
+                  {isLoadingStats ? '...' : (stats?.todayTruths || 0)}
+                </p>
               </div>
               <Activity className="w-8 h-8 text-white/40" />
             </div>
@@ -192,7 +343,9 @@ function YoyoHi() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-sm">This Week</p>
-                <p className="text-3xl font-light text-white">{stats?.weeklyTruths || 0}</p>
+                <p className="text-3xl font-light text-white">
+                  {isLoadingStats ? '...' : (stats?.weeklyTruths || 0)}
+                </p>
               </div>
               <BarChart3 className="w-8 h-8 text-white/40" />
             </div>
@@ -258,18 +411,20 @@ function YoyoHi() {
             
             <div className="space-y-3">
               <button className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center">
-               onClick={loadDashboardData}
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Data
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered');
+                  loadDashboardData();
+                }}
+                disabled={isLoadingStats}
+                <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingStats ? 'animate-spin' : ''}`} />
+                {isLoadingStats ? 'Refreshing...' : 'Refresh Data'}
               </button>
               
               <button className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center">
-               onClick={() => {
-                 // TODO: Create all-truths page when needed
-                 console.log('Navigate to all truths page');
-               }}
+                onClick={loadAllTruths}
+                disabled={isLoadingAllTruths}
                 <Users className="w-4 h-4 mr-2" />
-                View All Truths
+                {isLoadingAllTruths ? 'Loading...' : 'View All Truths'}
               </button>
             </div>
           </div>
