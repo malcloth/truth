@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, ArrowRight, RotateCcw } from 'lucide-react';
 import { supabase, UserTruth } from '../lib/supabase';
+import OpenAI from 'openai';
 
 function HomePage() {
   const [currentStep, setCurrentStep] = React.useState(0);
@@ -13,58 +14,49 @@ function HomePage() {
   const [firstQuestion, setFirstQuestion] = React.useState('');
   const [secondQuestion, setSecondQuestion] = React.useState('');
 
-  const callGrokAPI = async (prompt) => {
+  const callOpenAIAPI = async (prompt) => {
     try {
-      const apiKey = import.meta.env.VITE_GROK_API_KEY;
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       
       if (!apiKey) {
-        throw new Error('VITE_GROK_API_KEY environment variable is not set');
+        throw new Error('VITE_OPENAI_API_KEY environment variable is not set');
       }
 
-      const response = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a wise, introspective guide who asks profound questions that help people discover their inner truths. Keep responses concise and thought-provoking.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          model: 'grok-4-latest',
-          stream: false,
-          temperature: 0
-        })
+      const openai = new OpenAI({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API request failed: ${response.status} - ${errorText}`);
-      }
+      const response = await openai.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a wise, introspective guide who asks profound questions that help people discover their inner truths. Keep responses concise and thought-provoking.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        model: 'gpt-4o-mini',
+        temperature: 0
+      });
 
-      const data = await response.json();
-      return data.choices[0].message.content.trim();
+      return response.choices[0].message.content?.trim() || '';
     } catch (error) {
-      console.error('Grok API error:', error.message);
+      console.error('OpenAI API error:', error.message);
       throw error;
     }
   };
 
   const generateFirstQuestion = async () => {
     const prompt = 'Generate one profound, introspective question that helps someone discover a deep truth about themselves. The question should be thought-provoking and personal. Return only the question, no additional text.';
-    return await callGrokAPI(prompt);
+    return await callOpenAIAPI(prompt);
   };
 
   const generateSecondQuestion = async (firstAnswer) => {
     const prompt = `Based on this person's answer: "${firstAnswer}", generate a follow-up question that digs deeper into their psyche and helps reveal another layer of their inner truth. The question should be related but explore a different aspect of their personality or beliefs. Return only the question, no additional text.`;
-    return await callGrokAPI(prompt);
+    return await callOpenAIAPI(prompt);
   };
 
   const generateTruth = async (firstAnswer, secondAnswer) => {
@@ -73,7 +65,7 @@ function HomePage() {
 2. "${secondAnswer}"
 
 Generate a profound, 6-8 word truth about this person that captures their essence or reveals something meaningful about their character. The truth should be insightful, positive, and feel like a revelation. Return only the truth statement, no quotes or additional text.`;
-    return await callGrokAPI(prompt);
+    return await callOpenAIAPI(prompt);
   };
 
   const storeTruthInDatabase = async () => {
