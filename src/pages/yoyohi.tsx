@@ -14,7 +14,7 @@ import {
   Clock,
   ArrowLeft
 } from 'lucide-react';
-import { supabase, createAdminClient } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 interface DashboardStats {
   totalTruths: number;
@@ -61,73 +61,37 @@ function YoyoHi() {
   const loadDashboardData = async () => {
     setIsLoadingStats(true);
     try {
-      console.log('🔄 Loading dashboard data...');
+      console.log('📊 Fetching dashboard data from Edge Function...');
       
-      // Use admin client for dashboard queries to bypass RLS
-      const adminClient = createAdminClient();
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-dashboard-stats`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       
-      // Get total truths count
-      const { count: totalCount, error: totalError } = await adminClient
-        .from('user_truths')
-        .select('*', { count: 'exact', head: true });
-
-      if (totalError) {
-        console.error('Error fetching total count:', totalError);
-        throw totalError;
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch dashboard data');
       }
 
-      // Get today's truths count
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-      
-      const { count: todayCount, error: todayError } = await adminClient
-        .from('user_truths')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', todayStart.toISOString())
-        .lt('created_at', todayEnd.toISOString());
-
-      if (todayError) {
-        console.error('Error fetching today count:', todayError);
-        throw todayError;
-      }
-
-      // Get this week's truths count
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { count: weeklyCount, error: weeklyError } = await adminClient
-        .from('user_truths')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', weekAgo);
-
-      if (weeklyError) {
-        console.error('Error fetching weekly count:', weeklyError);
-        throw weeklyError;
-      }
-
-      // Get recent truths
-      const { data: recentTruths, error: recentError } = await adminClient
-        .from('user_truths')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (recentError) {
-        console.error('Error fetching recent truths:', recentError);
-        throw recentError;
-      }
-
-      console.log('📊 Dashboard stats:', { totalCount, todayCount, weeklyCount, recentCount: recentTruths?.length });
+      console.log('✅ Dashboard data received:', result.data);
       
       setStats({
-        totalTruths: totalCount || 0,
-        todayTruths: todayCount || 0,
-        weeklyTruths: weeklyCount || 0,
-        recentTruths: recentTruths || []
+        totalTruths: result.data.totalTruths,
+        todayTruths: result.data.todayTruths,
+        weeklyTruths: result.data.weeklyTruths,
+        recentTruths: result.data.recentTruths
       });
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      // Show user-friendly error
-      alert('Error loading dashboard data. Please check console for details.');
+      console.error('❌ Error loading dashboard data:', error);
+      alert(`Error loading dashboard data: ${error.message}`);
     } finally {
       setIsLoadingStats(false);
     }
@@ -136,24 +100,32 @@ function YoyoHi() {
   const loadAllTruths = async () => {
     setIsLoadingAllTruths(true);
     try {
-      console.log('🔄 Loading all truths...');
-      // Use admin client for viewing all truths
-      const adminClient = createAdminClient();
+      console.log('📚 Fetching all truths from Edge Function...');
       
-      const { data: truths, error } = await adminClient
-        .from('user_truths')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-all-truths`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      setAllTruths(truths || []);
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch all truths');
+      }
+
+      console.log(`✅ All truths received: ${result.count} truths`);
+      setAllTruths(result.data);
       setShowAllTruths(true);
     } catch (error) {
-      console.error('Error loading all truths:', error);
-      alert('Error loading all truths. Please check console for details.');
+      console.error('❌ Error loading all truths:', error);
+      alert(`Error loading all truths: ${error.message}`);
     } finally {
       setIsLoadingAllTruths(false);
     }
@@ -419,19 +391,21 @@ function YoyoHi() {
             </div>
             
             <div className="space-y-3">
-              <button className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center">
                 onClick={() => {
                   console.log('🔄 Manual refresh triggered');
                   loadDashboardData();
                 }}
                 disabled={isLoadingStats}
+                className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingStats ? 'animate-spin' : ''}`} />
                 {isLoadingStats ? 'Refreshing...' : 'Refresh Data'}
               </button>
               
-              <button className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center">
                 onClick={loadAllTruths}
                 disabled={isLoadingAllTruths}
+                className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Users className="w-4 h-4 mr-2" />
                 {isLoadingAllTruths ? 'Loading...' : 'View All Truths'}
               </button>
