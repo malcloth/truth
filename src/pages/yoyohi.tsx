@@ -402,6 +402,7 @@ function YoyoHi() {
                 {isLoadingStats ? 'Refreshing...' : 'Refresh Data'}
               </button>
               
+              <button
                 onClick={loadAllTruths}
                 disabled={isLoadingAllTruths}
                 className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
