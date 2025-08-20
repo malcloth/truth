@@ -14,7 +14,7 @@ import {
   Clock,
   ArrowLeft
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, createAdminClient } from '../lib/supabase';
 
 interface DashboardStats {
   totalTruths: number;
@@ -63,8 +63,11 @@ function YoyoHi() {
     try {
       console.log('🔄 Loading dashboard data...');
       
+      // Use admin client for dashboard queries to bypass RLS
+      const adminClient = createAdminClient();
+      
       // Get total truths count
-      const { count: totalCount, error: totalError } = await supabase
+      const { count: totalCount, error: totalError } = await adminClient
         .from('user_truths')
         .select('*', { count: 'exact', head: true });
 
@@ -78,7 +81,7 @@ function YoyoHi() {
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
       
-      const { count: todayCount, error: todayError } = await supabase
+      const { count: todayCount, error: todayError } = await adminClient
         .from('user_truths')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', todayStart.toISOString())
@@ -91,7 +94,7 @@ function YoyoHi() {
 
       // Get this week's truths count
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { count: weeklyCount, error: weeklyError } = await supabase
+      const { count: weeklyCount, error: weeklyError } = await adminClient
         .from('user_truths')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', weekAgo);
@@ -102,7 +105,7 @@ function YoyoHi() {
       }
 
       // Get recent truths
-      const { data: recentTruths, error: recentError } = await supabase
+      const { data: recentTruths, error: recentError } = await adminClient
         .from('user_truths')
         .select('*')
         .order('created_at', { ascending: false })
@@ -123,6 +126,8 @@ function YoyoHi() {
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      // Show user-friendly error
+      alert('Error loading dashboard data. Please check console for details.');
     } finally {
       setIsLoadingStats(false);
     }
@@ -132,7 +137,10 @@ function YoyoHi() {
     setIsLoadingAllTruths(true);
     try {
       console.log('🔄 Loading all truths...');
-      const { data: truths, error } = await supabase
+      // Use admin client for viewing all truths
+      const adminClient = createAdminClient();
+      
+      const { data: truths, error } = await adminClient
         .from('user_truths')
         .select('*')
         .order('created_at', { ascending: false });
@@ -145,6 +153,7 @@ function YoyoHi() {
       setShowAllTruths(true);
     } catch (error) {
       console.error('Error loading all truths:', error);
+      alert('Error loading all truths. Please check console for details.');
     } finally {
       setIsLoadingAllTruths(false);
     }
