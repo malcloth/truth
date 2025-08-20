@@ -67,7 +67,7 @@ async function postTweet(wisdom: string): Promise<void> {
   try {
     const apiKey = Deno.env.get('X_API_KEY');
     const apiSecret = Deno.env.get('X_API_SECRET');
-    const accessToken = Deno.env.get('our_acccess_x');
+    const accessToken = Deno.env.get('our_access_x');
     const accessSecret = Deno.env.get('our_secret');
 
     if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
