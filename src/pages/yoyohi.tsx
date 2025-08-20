@@ -258,18 +258,18 @@ function YoyoHi() {
             
             <div className="space-y-3">
               <button className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center">
+               onClick={loadDashboardData}
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh Data
               </button>
               
               <button className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center">
+               onClick={() => {
+                 // TODO: Create all-truths page when needed
+                 console.log('Navigate to all truths page');
+               }}
                 <Users className="w-4 h-4 mr-2" />
                 View All Truths
-              </button>
-              
-              <button className="w-full bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-2xl font-medium transition-colors border border-white/10 flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Analytics
               </button>
             </div>
           </div>
