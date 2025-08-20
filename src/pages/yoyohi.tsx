@@ -391,6 +391,7 @@ function YoyoHi() {
             </div>
             
             <div className="space-y-3">
+              <button
                 onClick={() => {
                   console.log('🔄 Manual refresh triggered');
                   loadDashboardData();
