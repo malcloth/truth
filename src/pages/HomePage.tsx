@@ -38,7 +38,7 @@ function HomePage() {
             content: prompt
           }
         ],
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-nano-2025-08-07',
         temperature: 0
       });
 
