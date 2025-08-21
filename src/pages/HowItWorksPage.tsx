@@ -11,32 +11,39 @@ interface Chapter {
 
 const chapters: Chapter[] = [
   {
-    id: 'welcome',
-    title: 'Welcome to Truth',
-    subtitle: 'Discover your authentic self through AI-powered reflection',
-    text: 'Truth is a platform that helps you uncover deep insights about yourself through thoughtful questions and AI analysis. By answering just two simple questions, you\'ll receive a personalized truth that captures something meaningful about who you are.',
+    id: 'what-is-our-truth',
+    title: 'What is "Our Truth"',
+    subtitle: 'A revolutionary platform for authentic self-discovery',
+    text: 'Our Truth is an AI-powered platform that helps you discover profound insights about yourself through personalized questions. We believe everyone has unique truths waiting to be uncovered, and our technology helps reveal them in a meaningful, shareable way.',
     icon: <Sparkles className="w-5 h-5" />
   },
   {
-    id: 'how-it-works',
-    title: 'How It Works',
-    subtitle: 'A simple 3-step process to discover your truth',
-    text: 'Our process is designed to be simple yet profound. First, you\'ll share your X username. Then, our AI will generate two personalized questions based on psychological insights. Finally, based on your answers, we\'ll create a unique truth statement that captures something essential about your character.',
+    id: 'community-context-ai',
+    title: 'How Community-Context AI works',
+    subtitle: 'AI that learns from collective human experience',
+    text: 'Our Community-Context AI analyzes patterns from thousands of truth discoveries to generate increasingly personalized questions. The more people use our platform, the better our AI becomes at uncovering deep, authentic insights that resonate with the human experience.',
     icon: <MessageSquare className="w-5 h-5" />
   },
   {
-    id: 'ai-technology',
-    title: 'AI Technology',
-    subtitle: 'Powered by advanced language models',
-    text: 'We use cutting-edge AI technology to analyze your responses and generate meaningful insights. Our system considers not just what you say, but how you express yourself, to create truths that feel authentic and personally relevant.',
+    id: 'truth-token',
+    title: '$TRUTH Token',
+    subtitle: 'The currency of authentic self-expression',
+    text: '$TRUTH is our native token that powers the Our Truth ecosystem. Token holders gain access to premium features, contribute to platform governance, and earn rewards for meaningful contributions to the community of truth seekers.',
     icon: <CheckCircle className="w-5 h-5" />
   },
   {
-    id: 'sharing',
-    title: 'Share Your Truth',
-    subtitle: 'Connect with others through authentic self-expression',
-    text: 'Once you discover your truth, you can easily share it on X (formerly Twitter) with a pre-filled message. This helps build a community of people exploring their authentic selves and sharing meaningful insights.',
+    id: 'truth-api',
+    title: 'Truth API (Coming Soon)',
+    subtitle: 'Integrate authentic insights into your applications',
+    text: 'Our upcoming Truth API will allow developers to integrate our powerful insight generation technology into their own applications. Build authentic user experiences, create personalized content, and tap into the power of community-driven AI.',
     icon: <Share2 className="w-5 h-5" />
+  },
+  {
+    id: 'try-it-now',
+    title: 'Try it out now!',
+    subtitle: 'Discover your truth in just 2 minutes',
+    text: 'Ready to uncover your authentic self? Start your journey by sharing your X username and answering two thoughtful questions. Join thousands of others who have discovered their truths and shared them with the world.',
+    icon: <Sparkles className="w-5 h-5" />
   }
 ];
 
