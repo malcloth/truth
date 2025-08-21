@@ -87,8 +87,19 @@ Focus on deep psychological patterns, recurring themes, and meaningful insights 
       throw new Error('No content received from gpt-5-nano-2025-08-07');
     }
 
-    // Parse the JSON response
-    const summary = JSON.parse(content) as TruthSummary;
+    // Clean the content to remove markdown code block delimiters if present
+    let cleanContent = content.trim();
+    
+    // Remove ```json at the beginning and ``` at the end if they exist
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '');
+    }
+    if (cleanContent.endsWith('```')) {
+      cleanContent = cleanContent.replace(/\s*```$/, '');
+    }
+    
+    // Parse the cleaned JSON response
+    const summary = JSON.parse(cleanContent.trim()) as TruthSummary;
     return summary;
   } catch (error) {
     console.error('gpt-5-nano-2025-08-07 API error:', error);
