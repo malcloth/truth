@@ -1,6 +1,15 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.55.0';
 import OpenAI from 'npm:openai@4.28.0';
 
+interface UserTruth {
+  x_username: string;
+  first_question: string;
+  first_answer: string;
+  second_question: string;
+  second_answer: string;
+  generated_truth: string;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -9,6 +18,9 @@ const corsHeaders = {
 
 interface GenerationRequest {
   type: 'first_question' | 'second_question' | 'generate_truth';
+  xUsername?: string;
+  firstQuestion?: string;
+  secondQuestion?: string;
   firstAnswer?: string;
   secondAnswer?: string;
 }
@@ -65,6 +77,39 @@ Generate a profound, 6-8 word truth about this person that captures their essenc
   return await callOpenAIAPI(prompt);
 }
 
+async function storeTruthInDatabase(userTruthData: UserTruth) {
+  console.log('🔍 storeTruthInDatabase called - starting database insertion...');
+  
+  try {
+    // Initialize Supabase client with service role key for bypassing RLS
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    
+    console.log('📤 Data to be inserted:', userTruthData);
+    
+    const { data, error } = await supabase
+      .from('user_truths')
+      .insert([userTruthData]);
+
+    if (error) {
+      console.error('❌ Error storing truth in database:', error);
+      throw error;
+    } else {
+      console.log('✅ Truth stored successfully in database');
+      console.log('✅ Inserted data response:', data);
+    }
+  } catch (error) {
+    console.error('💥 Unexpected error in storeTruthInDatabase:', error);
+    throw error;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -98,8 +143,23 @@ Deno.serve(async (req: Request) => {
         if (!requestData.firstAnswer || !requestData.secondAnswer) {
           throw new Error('Both answers are required for truth generation');
         }
+        if (!requestData.xUsername || !requestData.firstQuestion || !requestData.secondQuestion) {
+          throw new Error('Username and questions are required for truth generation');
+        }
         console.log('✨ Generating truth...');
         result = await generateTruth(requestData.firstAnswer, requestData.secondAnswer);
+        
+        // Store the complete truth data in database
+        const userTruthData: UserTruth = {
+          x_username: requestData.xUsername,
+          first_question: requestData.firstQuestion,
+          first_answer: requestData.firstAnswer,
+          second_question: requestData.secondQuestion,
+          second_answer: requestData.secondAnswer,
+          generated_truth: result,
+        };
+        
+        await storeTruthInDatabase(userTruthData);
         break;
 
       default:

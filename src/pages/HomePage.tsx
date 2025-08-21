@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, ArrowRight, RotateCcw } from 'lucide-react';
-import { supabase, UserTruth } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 function HomePage() {
   const [currentStep, setCurrentStep] = React.useState(0);
@@ -13,7 +13,7 @@ function HomePage() {
   const [firstQuestion, setFirstQuestion] = React.useState('');
   const [secondQuestion, setSecondQuestion] = React.useState('');
 
-  const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth', firstAnswer?: string, secondAnswer?: string) => {
+  const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth', firstAnswer?: string, secondAnswer?: string, xUsername?: string, firstQuestion?: string, secondQuestion?: string) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-truth`, {
         method: 'POST',
@@ -24,7 +24,10 @@ function HomePage() {
         body: JSON.stringify({
           type,
           firstAnswer,
-          secondAnswer
+          secondAnswer,
+          xUsername,
+          firstQuestion,
+          secondQuestion
         })
       });
 
@@ -42,39 +45,6 @@ function HomePage() {
     } catch (error) {
       console.error('Generate Truth API error:', error);
       throw error;
-    }
-  };
-
-  const storeTruthInDatabase = async () => {
-    console.log('🔍 storeTruthInDatabase called - starting database insertion...');
-    
-    try {
-      const userTruthData: UserTruth = {
-        x_username: xUsername,
-        first_question: firstQuestion,
-        first_answer: firstAnswer,
-        second_question: secondQuestion,
-        second_answer: secondAnswer,
-        generated_truth: generatedTruth,
-      };
-
-      console.log('📤 Data to be inserted:', userTruthData);
-      console.log('🔗 Supabase client initialized:', !!supabase);
-
-      const { data, error } = await supabase
-        .from('user_truths')
-        .insert([userTruthData]);
-
-      if (error) {
-        console.error('❌ Error storing truth in database:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
-      } else {
-        console.log('✅ Truth stored successfully in database');
-        console.log('✅ Inserted data response:', data);
-      }
-    } catch (error) {
-      console.error('💥 Unexpected error in storeTruthInDatabase:', error);
-      console.error('💥 Error stack:', error.stack);
     }
   };
 
@@ -97,11 +67,9 @@ function HomePage() {
         setSecondQuestion(question);
         setCurrentStep(2);
       } else if (currentStep === 2 && secondAnswer.trim() && getWordCount(secondAnswer) <= 15) {
-        const truth = await callGenerateTruthAPI('generate_truth', firstAnswer, secondAnswer);
+        const truth = await callGenerateTruthAPI('generate_truth', firstAnswer, secondAnswer, xUsername, firstQuestion, secondQuestion);
         setGeneratedTruth(truth);
         setCurrentStep(3);
-        // Store the complete truth data in Supabase
-        setTimeout(() => storeTruthInDatabase(), 100);
       }
     } catch (error) {
       console.error('Error generating content:', error);
@@ -117,7 +85,6 @@ function HomePage() {
       } else if (currentStep === 2) {
         setGeneratedTruth("You are braver than you believe");
         setCurrentStep(3);
-        setTimeout(() => storeTruthInDatabase(), 100);
       }
     } finally {
       setIsLoading(false);
