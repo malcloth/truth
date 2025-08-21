@@ -138,7 +138,7 @@ function HomePage() {
   };
 
   const handleShareToX = () => {
-    const tweetText = `"${generatedTruth}" - @${xUsername}\n\nDiscover your truth at truth.fm`;
+    const tweetText = `"${generatedTruth}" - @${xUsername}\n\nfind your truth - ourtruth.xyz`;
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, '_blank');
   };

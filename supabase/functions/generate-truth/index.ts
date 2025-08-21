@@ -54,8 +54,8 @@ const SVG_TEMPLATE = `
   </text>
   
   <!-- Footer -->
-  <text x="400" y="480" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="system-ui, -apple-system, sans-serif" font-size="18">
-    truth.fm
+  <text x="400" y="480" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="system-ui, -apple-system, sans-serif" font-size="16">
+    find your truth - ourtruth.xyz
   </text>
 </svg>
 `;
@@ -123,7 +123,6 @@ async function generateShareablePNG(truth: string, username: string): Promise<st
     
     // Convert SVG to PNG using resvg-js
     const resvg = new Resvg(svgString, {
-      background: 'rgba(16, 185, 129, 1)', // Fallback background
       fitTo: {
         mode: 'width',
         value: 800,
