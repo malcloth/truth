@@ -12,37 +12,37 @@ interface Chapter {
 const chapters: Chapter[] = [
   {
     id: 'what-is-our-truth',
-    title: 'What is "Our Truth"',
-    subtitle: 'A revolutionary platform for authentic self-discovery',
-    text: 'Our Truth is an AI-powered platform that helps you discover profound insights about yourself through personalized questions. We believe everyone has unique truths waiting to be uncovered, and our technology helps reveal them in a meaningful, shareable way.',
+    title: 'What is Our Truth?',
+    subtitle: 'The world\'s first community-context AI',
+    text: 'Truth is the world\'s first community-context AI. Answer just two AI-generated questions to discover a revealing truth about yourself. Meanwhile, @ourtruthai tweets wisdom 10x daily - each one inspired by the collective context of everyone who\'s participated. Every interaction makes it smarter, creating an AI that truly understands crypto twitter\'s soul. The more degens contribute, the more unhinged and accurate it becomes.',
     icon: <Sparkles className="w-5 h-5" />
   },
   {
     id: 'community-context-ai',
-    title: 'How Community-Context AI works',
-    subtitle: 'AI that learns from collective human experience',
-    text: 'Our Community-Context AI analyzes patterns from thousands of truth discoveries to generate increasingly personalized questions. The more people use our platform, the better our AI becomes at uncovering deep, authentic insights that resonate with the human experience.',
+    title: 'Community-Context AI',
+    subtitle: 'Proprietary system for scaling user inputs into AI context',
+    text: 'This is a proprietary system for scaling user inputs into AI context. For the longest time, AI context has been closed - controlled by companies, trained on scraped data. Truth makes context open to the public, meaning anyone can contribute to training the bot. Here\'s how it works: A swarm of sub-agents summarize user inputs in randomized pools, which then inform a larger agent. This lets us scale to thousands of community contributions without overwhelming or contradicting the AI. Think of it like this: Every time someone participates, they\'re adding a drop to an ocean of consciousness. Each drop changes the current, and eventually, the entire ocean thinks differently. The Truth bot is just the first application of this context tech. More applications coming soon.',
     icon: <MessageSquare className="w-5 h-5" />
   },
   {
     id: 'truth-token',
     title: '$TRUTH Token',
-    subtitle: 'The currency of authentic self-expression',
-    text: '$TRUTH is our native token that powers the Our Truth ecosystem. Token holders gain access to premium features, contribute to platform governance, and earn rewards for meaningful contributions to the community of truth seekers.',
+    subtitle: 'Ownership in the future of open AI',
+    text: '$TRUTH launched on @heavendex with tokenomics fully open for trading and dev supply under 10%. Future plans: The Truth API will allow anyone to build on top of the community context protocol. Fees from these projects will burn $TRUTH, creating sustainable value for holders. This isn\'t just a token - it\'s ownership in the future of open AI.',
     icon: <CheckCircle className="w-5 h-5" />
   },
   {
     id: 'truth-api',
-    title: 'Truth API (Coming Soon)',
-    subtitle: 'Integrate authentic insights into your applications',
-    text: 'Our upcoming Truth API will allow developers to integrate our powerful insight generation technology into their own applications. Build authentic user experiences, create personalized content, and tap into the power of community-driven AI.',
+    title: 'Truth API',
+    subtitle: 'Build anything on top of community-context tech (Coming Soon)',
+    text: 'Build anything on top of community-context tech. Doesn\'t have to be truth-related - the structure of public-contributed context is the breakthrough. Imagine AI apps that actually understand their users because users train them directly.',
     icon: <Share2 className="w-5 h-5" />
   },
   {
     id: 'try-it-now',
-    title: 'Try it out now!',
-    subtitle: 'Discover your truth in just 2 minutes',
-    text: 'Ready to uncover your authentic self? Start your journey by sharing your X username and answering two thoughtful questions. Join thousands of others who have discovered their truths and shared them with the world.',
+    title: 'Try It Out Now',
+    subtitle: 'Get your truth. Contribute to the collective. Shape the future of AI.',
+    text: 'Ready to uncover your truth and contribute to the collective consciousness? Start your journey by sharing your X username and answering two AI-generated questions. Every participation makes the AI smarter and more accurate.',
     icon: <Sparkles className="w-5 h-5" />
   }
 ];
@@ -123,8 +123,20 @@ function HowItWorksPage() {
               </h2>
 
               {/* Text Content */}
-              <div className="text-white/70 text-lg leading-relaxed max-w-xl mx-auto">
+              <div className="text-white/70 text-lg leading-relaxed max-w-4xl mx-auto">
                 <p>{currentChapter.text}</p>
+                
+                {/* Special CTA for the last chapter */}
+                {currentChapter.id === 'try-it-now' && (
+                  <div className="mt-8">
+                    <a
+                      href="/"
+                      className="inline-flex items-center bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-2xl font-medium transition-colors border border-white/10"
+                    >
+                      Back to Truth →
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Chapter Navigation */}
