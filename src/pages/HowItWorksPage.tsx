@@ -14,35 +14,35 @@ const chapters: Chapter[] = [
     id: 'what-is-our-truth',
     title: 'What is Our Truth?',
     subtitle: 'The world\'s first community-context AI',
-    text: 'Truth is the world\'s first community-context AI. Answer just two AI-generated questions to discover a revealing truth about yourself. Meanwhile, @ourtruthai tweets wisdom 10x daily - each one inspired by the collective context of everyone who\'s participated. Every interaction makes it smarter, creating an AI that truly understands crypto twitter\'s soul. The more degens contribute, the more unhinged and accurate it becomes.',
+    text: 'Truth is the world\'s first community-context AI. Answer just two AI-generated questions to discover a revealing truth about yourself.\n\nMeanwhile, @ourtruthai tweets wisdom 10x daily - each one inspired by the collective context of everyone who\'s participated.\n\nEvery interaction makes it smarter, creating an AI that truly understands crypto twitter\'s soul. The more degens contribute, the more unhinged and accurate it becomes.',
     icon: <Sparkles className="w-5 h-5" />
   },
   {
     id: 'community-context-ai',
     title: 'Community-Context AI',
     subtitle: 'Proprietary system for scaling user inputs into AI context',
-    text: 'This is a proprietary system for scaling user inputs into AI context. For the longest time, AI context has been closed - controlled by companies, trained on scraped data. Truth makes context open to the public, meaning anyone can contribute to training the bot. Here\'s how it works: A swarm of sub-agents summarize user inputs in randomized pools, which then inform a larger agent. This lets us scale to thousands of community contributions without overwhelming or contradicting the AI. Think of it like this: Every time someone participates, they\'re adding a drop to an ocean of consciousness. Each drop changes the current, and eventually, the entire ocean thinks differently. The Truth bot is just the first application of this context tech. More applications coming soon.',
+    text: 'This is a proprietary system for scaling user inputs into AI context.\n\nFor the longest time, AI context has been closed - controlled by companies, trained on scraped data. Truth makes context open to the public, meaning anyone can contribute to training the bot.\n\nHere\'s how it works: A swarm of sub-agents summarize user inputs in randomized pools, which then inform a larger agent. This lets us scale to thousands of community contributions without overwhelming or contradicting the AI.\n\nThink of it like this: Every time someone participates, they\'re adding a drop to an ocean of consciousness. Each drop changes the current, and eventually, the entire ocean thinks differently.\n\nThe Truth bot is just the first application of this context tech. More applications coming soon.',
     icon: <MessageSquare className="w-5 h-5" />
   },
   {
     id: 'truth-token',
     title: '$TRUTH Token',
     subtitle: 'Ownership in the future of open AI',
-    text: '$TRUTH launched on @heavendex with tokenomics fully open for trading and dev supply under 10%. Future plans: The Truth API will allow anyone to build on top of the community context protocol. Fees from these projects will burn $TRUTH, creating sustainable value for holders. This isn\'t just a token - it\'s ownership in the future of open AI.',
+    text: '$TRUTH launched on @heavendex with tokenomics fully open for trading and dev supply under 10%.\n\nFuture plans: The Truth API will allow anyone to build on top of the community context protocol. Fees from these projects will burn $TRUTH, creating sustainable value for holders.\n\nThis isn\'t just a token - it\'s ownership in the future of open AI.',
     icon: <CheckCircle className="w-5 h-5" />
   },
   {
     id: 'truth-api',
     title: 'Truth API',
     subtitle: 'Build anything on top of community-context tech (Coming Soon)',
-    text: 'Build anything on top of community-context tech. Doesn\'t have to be truth-related - the structure of public-contributed context is the breakthrough. Imagine AI apps that actually understand their users because users train them directly.',
+    text: 'Build anything on top of community-context tech. Doesn\'t have to be truth-related - the structure of public-contributed context is the breakthrough.\n\nImagine AI apps that actually understand their users because users train them directly.',
     icon: <Share2 className="w-5 h-5" />
   },
   {
     id: 'try-it-now',
     title: 'Try It Out Now',
     subtitle: 'Get your truth. Contribute to the collective. Shape the future of AI.',
-    text: 'Ready to uncover your truth and contribute to the collective consciousness? Start your journey by sharing your X username and answering two AI-generated questions. Every participation makes the AI smarter and more accurate.',
+    text: 'Ready to uncover your truth and contribute to the collective consciousness?\n\nStart your journey by sharing your X username and answering two AI-generated questions.\n\nEvery participation makes the AI smarter and more accurate.',
     icon: <Sparkles className="w-5 h-5" />
   }
 ];
@@ -123,8 +123,12 @@ function HowItWorksPage() {
               </h2>
 
               {/* Text Content */}
-              <div className="text-white/70 text-lg leading-relaxed max-w-4xl mx-auto">
-                <p>{currentChapter.text}</p>
+              <div className="text-white/70 text-lg leading-relaxed max-w-4xl mx-auto space-y-6">
+                {currentChapter.text.split('\n\n').map((paragraph, index) => (
+                  <p key={index} className="leading-relaxed">
+                    {paragraph}
+                  </p>
+                ))}
                 
                 {/* Special CTA for the last chapter */}
                 {currentChapter.id === 'try-it-now' && (
