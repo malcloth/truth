@@ -183,7 +183,7 @@ function HomePage() {
             <a href="#" className="text-white text-sm font-medium hover:text-white/80 transition-colors">
               Find your truth
             </a>
-            <a href="#" className="text-white text-sm font-medium hover:text-white/80 transition-colors">
+            <a href="/how-it-works" className="text-white text-sm font-medium hover:text-white/80 transition-colors">
               How it works
             </a>
           </div>
@@ -195,7 +195,7 @@ function HomePage() {
             <a href="#" className="text-white text-lg font-medium hover:text-white/80 transition-colors">
               Find your truth
             </a>
-            <a href="#" className="text-white text-lg font-medium hover:text-white/80 transition-colors">
+            <a href="/how-it-works" className="text-white text-lg font-medium hover:text-white/80 transition-colors">
               How it works
             </a>
           </div>
