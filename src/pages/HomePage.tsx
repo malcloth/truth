@@ -223,6 +223,15 @@ function HomePage() {
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center px-4 md:px-8 py-8 md:py-16 relative z-10">
+        {/* Logo */}
+        <div className="mb-8 md:mb-12">
+          <img 
+            src="/Untitled (5000 x 5000 px).png" 
+            alt="Truth Logo" 
+            className="w-20 h-20 md:w-24 md:h-24 object-contain"
+          />
+        </div>
+        
         <h1 className="text-4xl md:text-6xl font-light text-white text-center mb-8 md:mb-16 tracking-wide">
           whats your truth?
         </h1>
