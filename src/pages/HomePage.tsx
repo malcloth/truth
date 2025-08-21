@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, ArrowRight, RotateCcw } from 'lucide-react';
+import { Search, ArrowRight, RotateCcw, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 function HomePage() {
@@ -245,7 +245,22 @@ function HomePage() {
             </div>
 
             {/* Form Content */}
-            <div className="min-h-80 md:min-h-96 p-4 md:p-8 flex flex-col justify-center">
+            <div className="min-h-80 md:min-h-96 p-4 md:p-8 flex flex-col justify-center relative">
+              {/* Loading Overlay */}
+              {isLoading && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <RefreshCw className="w-8 h-8 text-white animate-spin mx-auto mb-4" />
+                    <p className="text-white text-lg font-medium">
+                      {currentStep === 0 && "Generating your first question..."}
+                      {currentStep === 1 && "Creating your second question..."}
+                      {currentStep === 2 && "Discovering your truth..."}
+                    </p>
+                    <p className="text-white/60 text-sm mt-2">This may take a moment</p>
+                  </div>
+                </div>
+              )}
+              
               {/* Step 0: Username Input */}
               {currentStep === 0 && (
                 <div className="space-y-6">
