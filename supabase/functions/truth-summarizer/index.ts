@@ -98,7 +98,7 @@ IMPORTANT: Return ONLY the JSON object, no other text, no markdown code blocks, 
       ],
       max_completion_tokens: 1500,
       reasoning_effort: "high",
-      verbosity: "low",
+      verbosity: "medium",
     });
 
     const content = response.choices[0].message.content;
