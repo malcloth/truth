@@ -27,7 +27,9 @@ interface TruthSummary {
   overall_sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
 }
 
-async function callGPT5Nano(truths: UserTruth[]): Promise<TruthSummary> {
+async function analyzetruthsWithGPT5Nano(truths: UserTruth[]): Promise<TruthSummary> {
+  console.log(`🤖 Analyzing ${truths.length} truths with gpt-5-nano-2025-08-07...`);
+  
   try {
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     
@@ -40,46 +42,60 @@ async function callGPT5Nano(truths: UserTruth[]): Promise<TruthSummary> {
     });
 
     // Prepare the truths data for analysis
-    const truthsText = truths.map(truth => {
-      return `Username: ${truth.x_username}
-Q1: ${truth.first_question}
-A1: ${truth.first_answer}
-Q2: ${truth.second_question}
-A2: ${truth.second_answer}
-Truth: ${truth.generated_truth}
+    const truthsText = truths.map((truth, index) => {
+      return `Entry ${index + 1}:
+Username: @${truth.x_username}
+Question 1: ${truth.first_question}
+Answer 1: ${truth.first_answer}
+Question 2: ${truth.second_question}
+Answer 2: ${truth.second_answer}
+Generated Truth: "${truth.generated_truth}"
+Timestamp: ${truth.created_at}
 ---`;
     }).join('\n');
 
-    const prompt = `Analyze the following ${truths.length} user truth submissions for patterns, themes, and emotional insights. 
+    const analysisPrompt = `You are analyzing ${truths.length} user truth submissions to extract meaningful psychological and behavioral patterns.
 
+DATA TO ANALYZE:
 ${truthsText}
 
-Please analyze these truths and return a structured JSON response with the following format:
+ANALYSIS REQUIREMENTS:
+Please analyze these truth submissions and identify:
+1. Major recurring themes across users
+2. Overall emotional tone of the submissions
+3. Key behavioral or thought patterns
+4. Primary concerns, fears, or anxieties expressed
+5. Deep insights about human nature revealed
+6. The overall sentiment across all submissions
+
+OUTPUT FORMAT:
+Return your analysis as a JSON object with this exact structure (no markdown formatting, just pure JSON):
+
 {
-  "themes": ["array of 3-5 main themes found"],
-  "emotional_tone": "overall emotional tone description",
-  "key_patterns": ["array of 3-5 key behavioral or thought patterns"],
-  "dominant_concerns": ["array of main concerns or fears expressed"],
-  "insights": ["array of 3-5 key insights about human nature from this data"],
+  "themes": ["theme1", "theme2", "theme3", "theme4", "theme5"],
+  "emotional_tone": "detailed description of the overall emotional atmosphere",
+  "key_patterns": ["pattern1", "pattern2", "pattern3", "pattern4"],
+  "dominant_concerns": ["concern1", "concern2", "concern3", "concern4"],
+  "insights": ["insight1", "insight2", "insight3", "insight4", "insight5"],
   "overall_sentiment": "positive|negative|neutral|mixed"
 }
 
-Focus on deep psychological patterns, recurring themes, and meaningful insights that could inform wisdom creation. Be concise but insightful.`;
+IMPORTANT: Return ONLY the JSON object, no other text, no markdown code blocks, no explanations.`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-5-nano-2025-08-07', // Using gpt-5-nano as specified
+      model: 'gpt-5-nano-2025-08-07',
       messages: [
         {
           role: 'system',
-          content: 'You are a wise psychologist and data analyst who excels at finding meaningful patterns in human responses. Analyze the provided truth submissions and extract deep insights about human nature, fears, hopes, and behavioral patterns.'
+          content: 'You are a brilliant psychologist and data analyst specializing in human behavior patterns. You excel at identifying deep psychological themes and extracting meaningful insights from personal responses. Always respond with clean JSON only, never use markdown formatting.'
         },
         {
           role: 'user',
-          content: prompt
+          content: analysisPrompt
         }
       ],
-      temperature: 0.3,
-      max_tokens: 1000,
+      temperature: 0.2,
+      max_tokens: 1500,
     });
 
     const content = response.choices[0].message.content;
@@ -87,23 +103,45 @@ Focus on deep psychological patterns, recurring themes, and meaningful insights 
       throw new Error('No content received from gpt-5-nano-2025-08-07');
     }
 
-    // Clean the content to remove markdown code block delimiters if present
+    console.log('🔍 Raw response from gpt-5-nano-2025-08-07:', content);
+
+    // Clean the content to handle any potential markdown formatting
     let cleanContent = content.trim();
     
-    // Remove ```json at the beginning and ``` at the end if they exist
+    // Remove markdown code block delimiters if present
     if (cleanContent.startsWith('```json')) {
       cleanContent = cleanContent.replace(/^```json\s*/, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '');
     }
+    
     if (cleanContent.endsWith('```')) {
       cleanContent = cleanContent.replace(/\s*```$/, '');
     }
     
-    // Parse the cleaned JSON response
-    const summary = JSON.parse(cleanContent.trim()) as TruthSummary;
+    // Additional cleanup for any backticks
+    cleanContent = cleanContent.replace(/^`+|`+$/g, '').trim();
+    
+    console.log('🧹 Cleaned content for parsing:', cleanContent);
+
+    // Parse the JSON response
+    const summary = JSON.parse(cleanContent) as TruthSummary;
+    
+    console.log('✅ Successfully parsed analysis results');
     return summary;
+    
   } catch (error) {
-    console.error('gpt-5-nano-2025-08-07 API error:', error);
-    throw error;
+    console.error('❌ gpt-5-nano-2025-08-07 analysis error:', error);
+    
+    // If JSON parsing fails, log the content for debugging
+    if (error instanceof SyntaxError) {
+      console.error('🔍 JSON Parse Error Details:', {
+        error: error.message,
+        attemptedToParse: error.message.includes('not valid JSON') ? 'See raw response above' : 'Unknown'
+      });
+    }
+    
+    throw new Error(`Analysis failed with gpt-5-nano-2025-08-07: ${error.message}`);
   }
 }
 
@@ -118,19 +156,20 @@ Deno.serve(async (req: Request) => {
 
   try {
     console.log('🔄 Truth Summarizer starting...');
+    console.log('📅 Current timestamp:', new Date().toISOString());
 
     // Initialize Supabase client with service role key for full access
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase environment variables');
+      throw new Error('Missing required Supabase environment variables');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Step 1: Get the last processed timestamp from the most recent summary
-    console.log('📅 Fetching last processed timestamp...');
+    // Step 1: Get the timestamp of the last processed truth
+    console.log('📊 Checking for previous summary records...');
     const { data: lastSummary, error: summaryError } = await supabase
       .from('truth_summaries')
       .select('last_processed_at')
@@ -138,39 +177,41 @@ Deno.serve(async (req: Request) => {
       .limit(1)
       .single();
 
-    let lastProcessedAt: string;
+    let lastProcessedTimestamp: string;
+    
     if (summaryError && summaryError.code === 'PGRST116') {
-      // No summaries exist yet, use a very early timestamp
-      lastProcessedAt = '1970-01-01T00:00:00.000Z';
-      console.log('📝 No previous summaries found, starting from beginning');
+      // No summaries exist yet - start from the beginning
+      lastProcessedTimestamp = '1970-01-01T00:00:00.000Z';
+      console.log('🆕 No previous summaries found - processing all truths');
     } else if (summaryError) {
-      throw new Error(`Error fetching last summary: ${summaryError.message}`);
+      throw new Error(`Failed to fetch last summary: ${summaryError.message}`);
     } else {
-      lastProcessedAt = lastSummary.last_processed_at;
-      console.log(`📝 Last processed: ${lastProcessedAt}`);
+      lastProcessedTimestamp = lastSummary.last_processed_at;
+      console.log(`📅 Last processed timestamp: ${lastProcessedTimestamp}`);
     }
 
-    // Step 2: Fetch ONLY truths created AFTER the last processed timestamp
-    console.log('🔍 Fetching new truths...');
+    // Step 2: Fetch all truths created after the last processed timestamp
+    console.log('🔍 Fetching new truths for processing...');
     const { data: newTruths, error: truthsError } = await supabase
       .from('user_truths')
       .select('*')
-      .gt('created_at', lastProcessedAt)
+      .gt('created_at', lastProcessedTimestamp)
       .order('created_at', { ascending: true });
 
     if (truthsError) {
-      throw new Error(`Error fetching new truths: ${truthsError.message}`);
+      throw new Error(`Failed to fetch new truths: ${truthsError.message}`);
     }
 
-    // Step 3: If no new truths, exit early
+    // Step 3: Check if there are new truths to process
     if (!newTruths || newTruths.length === 0) {
-      console.log('✅ No new truths to process, exiting early');
+      console.log('✨ No new truths to process - all caught up!');
       return new Response(
         JSON.stringify({
           success: true,
           message: 'No new truths to process',
           processed_count: 0,
-          last_processed_at: lastProcessedAt
+          last_processed_at: lastProcessedTimestamp,
+          next_check: new Date(Date.now() + 60 * 60 * 1000).toISOString()
         }),
         {
           headers: {
@@ -182,50 +223,64 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log(`📊 Found ${newTruths.length} new truths to process`);
+    console.log(`📈 Found ${newTruths.length} new truths to analyze`);
+    console.log(`📅 Period: ${newTruths[0].created_at} to ${newTruths[newTruths.length - 1].created_at}`);
 
-    // Step 4: Send new truths to GPT-4o-mini for analysis
-    console.log('🤖 Analyzing truths with gpt-5-nano-2025-08-07...');
-    const summaryJson = await callGPT5Nano(newTruths);
+    // Step 4: Analyze the new truths using gpt-5-nano-2025-08-07
+    const analysisResults = await analyzetruthsWithGPT5Nano(newTruths);
 
-    // Step 5: Store the summary with metadata
+    // Step 5: Prepare summary record for database
     const periodStart = newTruths[0].created_at;
     const periodEnd = newTruths[newTruths.length - 1].created_at;
-    const newLastProcessedAt = periodEnd;
+    const newLastProcessedTimestamp = periodEnd;
 
-    console.log('💾 Storing summary in database...');
+    console.log('💾 Storing analysis results in truth_summaries table...');
+    
     const { data: insertedSummary, error: insertError } = await supabase
       .from('truth_summaries')
       .insert([{
         period_start: periodStart,
         period_end: periodEnd,
-        last_processed_at: newLastProcessedAt,
-        summary_json: summaryJson,
+        last_processed_at: newLastProcessedTimestamp,
+        summary_json: analysisResults,
         truth_count: newTruths.length
       }])
       .select()
       .single();
 
     if (insertError) {
-      throw new Error(`Error inserting summary: ${insertError.message}`);
+      throw new Error(`Failed to store analysis results: ${insertError.message}`);
     }
 
-    console.log(`✅ Successfully processed ${newTruths.length} truths and created summary ${insertedSummary.id}`);
+    console.log(`✅ Successfully processed batch: ${insertedSummary.id}`);
+    
+    // Step 6: Return success response with detailed information
+    const responseData = {
+      success: true,
+      message: `Successfully analyzed and summarized ${newTruths.length} new truths`,
+      summary_id: insertedSummary.id,
+      processed_count: newTruths.length,
+      period: {
+        start: periodStart,
+        end: periodEnd
+      },
+      last_processed_at: newLastProcessedTimestamp,
+      analysis_preview: {
+        themes_count: analysisResults.themes.length,
+        overall_sentiment: analysisResults.overall_sentiment,
+        emotional_tone: analysisResults.emotional_tone.substring(0, 100) + '...'
+      },
+      next_scheduled_run: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    };
+
+    console.log('🎉 Truth summarizer completed successfully:', {
+      summary_id: responseData.summary_id,
+      processed: responseData.processed_count,
+      sentiment: responseData.analysis_preview.overall_sentiment
+    });
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Successfully processed ${newTruths.length} new truths`,
-        processed_count: newTruths.length,
-        summary_id: insertedSummary.id,
-        period_start: periodStart,
-        period_end: periodEnd,
-        last_processed_at: newLastProcessedAt,
-        summary_preview: {
-          themes: summaryJson.themes,
-          overall_sentiment: summaryJson.overall_sentiment
-        }
-      }),
+      JSON.stringify(responseData),
       {
         headers: {
           ...corsHeaders,
@@ -236,14 +291,18 @@ Deno.serve(async (req: Request) => {
     );
 
   } catch (error) {
-    console.error('❌ Error in truth-summarizer:', error);
+    console.error('❌ Truth Summarizer failed:', error);
+    
+    const errorResponse = {
+      success: false,
+      error: error.message,
+      message: 'Truth summarizer encountered an error',
+      timestamp: new Date().toISOString(),
+      function: 'truth-summarizer'
+    };
 
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-        message: 'Failed to process and summarize truths'
-      }),
+      JSON.stringify(errorResponse),
       {
         headers: {
           ...corsHeaders,
