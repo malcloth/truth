@@ -13,6 +13,29 @@ function HomePage() {
   const [firstQuestion, setFirstQuestion] = React.useState('');
   const [secondQuestion, setSecondQuestion] = React.useState('');
   const [shareablePngBase64, setShareablePngBase64] = React.useState('');
+  const [loadingMessageIndex, setLoadingMessageIndex] = React.useState(0);
+
+  const loadingMessages = [
+    "your question is coming...",
+    "stop selling the bag 💎",
+    "literally have patience",
+    "hold more than 3 sec bro",
+    "trust the process ✨",
+    "diamonds hands only 💎🙌",
+    "brewing something good...",
+    "patience is a virtue",
+    "good things take time",
+    "generating wisdom..."
+  ];
+
+  React.useEffect(() => {
+    if (isLoading) {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [isLoading, loadingMessages.length]);
 
   const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth', firstAnswer?: string, secondAnswer?: string, xUsername?: string, firstQuestion?: string, secondQuestion?: string) => {
     try {
@@ -251,12 +274,10 @@ function HomePage() {
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
                   <div className="text-center">
                     <RefreshCw className="w-8 h-8 text-white animate-spin mx-auto mb-4" />
-                    <p className="text-white text-lg font-medium">
-                      {currentStep === 0 && "Generating your first question..."}
-                      {currentStep === 1 && "Creating your second question..."}
-                      {currentStep === 2 && "Discovering your truth..."}
+                    <p className="text-white text-lg font-medium transition-opacity duration-500">
+                      {loadingMessages[loadingMessageIndex]}
                     </p>
-                    <p className="text-white/60 text-sm mt-2">This may take a moment</p>
+                    <p className="text-white/60 text-sm mt-2">AI is cooking... 🔥</p>
                   </div>
                 </div>
               )}
