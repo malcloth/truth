@@ -393,7 +393,6 @@ function HomePage() {
                         <p className="text-white/50 text-xs">Generating your shareable PNG...</p>
                       </div>
                     )}
-                    </div>
                   </div>
                 </div>
               )}
