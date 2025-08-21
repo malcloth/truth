@@ -25,39 +25,6 @@ interface GenerationRequest {
   secondAnswer?: string;
 }
 
-// SVG Template - Replace this with your actual SVG content
-const SVG_TEMPLATE = `
-<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#84cc16;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#eab308;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  
-  <!-- Background -->
-  <rect width="800" height="600" fill="url(#bgGradient)"/>
-  
-  <!-- Content Container -->
-  <rect x="60" y="80" width="680" height="440" rx="30" fill="rgba(0,0,0,0.8)" stroke="rgba(255,255,255,0.1)"/>
-  
-  <!-- Truth Text -->
-  <text x="400" y="280" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="300">
-    <tspan x="400" dy="0">"{{TRUTH_TEXT}}"</tspan>
-  </text>
-  
-  <!-- Username -->
-  <text x="400" y="380" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="500">
-    @{{USERNAME}}
-  </text>
-  
-  <!-- Footer -->
-  <text x="400" y="480" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="system-ui, -apple-system, sans-serif" font-size="16">
-    find your truth - ourtruth.xyz
-  </text>
-</svg>
-`;
 
 async function callOpenAIAPI(prompt: string): Promise<string> {
   try {

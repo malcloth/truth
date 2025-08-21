@@ -12,7 +12,6 @@ function HomePage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [firstQuestion, setFirstQuestion] = React.useState('');
   const [secondQuestion, setSecondQuestion] = React.useState('');
-  const [shareablePngBase64, setShareablePngBase64] = React.useState('');
   const [loadingMessageIndex, setLoadingMessageIndex] = React.useState(0);
 
   const loadingMessages = [
@@ -91,16 +90,10 @@ function HomePage() {
         setSecondQuestion(response.result);
         setCurrentStep(2);
       } else if (currentStep === 2 && secondAnswer.trim() && getWordCount(secondAnswer) <= 15) {
-        console.log('🖼️ Calling API to generate truth and PNG...');
+        console.log('✨ Calling API to generate truth...');
         const response = await callGenerateTruthAPI('generate_truth', firstAnswer, secondAnswer, xUsername, firstQuestion, secondQuestion);
-        console.log('📦 API Response:', response);
+        console.log('📦 Truth generated:', response.result);
         setGeneratedTruth(response.result);
-        if (response.shareablePngBase64) {
-          console.log('🖼️ PNG received successfully, length:', response.shareablePngBase64.length);
-          setShareablePngBase64(response.shareablePngBase64);
-        } else {
-          console.warn('⚠️ No PNG data received in response');
-        }
         setCurrentStep(3);
       }
     } catch (error) {
@@ -145,31 +138,11 @@ function HomePage() {
     setFirstQuestion('');
     setSecondQuestion('');
     setCurrentQuestion('');
-    setShareablePngBase64('');
     setIsLoading(false);
   };
 
-  const handleDownloadPNG = () => {
-    if (!shareablePngBase64) return;
-    
-    const byteCharacters = atob(shareablePngBase64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'image/png' });
-    
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `truth-${xUsername}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handleShareToX = () => {
-    const tweetText = `"${generatedTruth}" - @${xUsername}\n\nfind your truth - ourtruth.xyz`;
+    const tweetText = `I found out my $truth. ourtruth.xyz: "${generatedTruth}" @ourtruthai on @heavendex`;
     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
     window.open(tweetUrl, '_blank');
   };
@@ -408,35 +381,13 @@ function HomePage() {
                   
                   <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                     <p className="text-white/60 text-sm mb-4">Share your truth:</p>
-                    
-                    {shareablePngBase64 ? (
-                      <div className="space-y-4">
-                        <img
-                          src={`data:image/png;base64,${shareablePngBase64}`}
-                          alt="Your shareable truth"
-                          className="w-full max-w-md mx-auto rounded-2xl border border-white/10"
-                        />
-                        
-                        <div className="flex space-x-4 justify-center">
-                          <button
-                            onClick={handleDownloadPNG}
-                            className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-medium transition-colors border border-white/10 text-sm"
-                          >
-                            Download PNG
-                          </button>
-                          <button
-                            onClick={handleShareToX}
-                            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-xl font-medium transition-colors border border-blue-400/20 text-sm"
-                          >
-                            Share on X
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                        <p className="text-white/50 text-xs">Generating your shareable PNG...</p>
-                      </div>
-                    )}
+                    <button
+                      onClick={handleShareToX}
+                      className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-6 py-4 rounded-xl font-medium transition-colors border border-blue-400/20 flex items-center justify-center"
+                    >
+                      <span className="mr-2">🐦</span>
+                      Share on X
+                    </button>
                   </div>
                 </div>
               )}
