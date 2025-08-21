@@ -82,6 +82,8 @@ Return your analysis as a JSON object with this exact structure (no markdown for
 
 IMPORTANT: Return ONLY the JSON object, no other text, no markdown code blocks, no explanations.`;
 
+    console.log('🔍 Sending analysis prompt to gpt-5-nano-2025-08-07...');
+
     const response = await openai.chat.completions.create({
       model: 'gpt-5-nano-2025-08-07',
       messages: [
@@ -105,7 +107,7 @@ IMPORTANT: Return ONLY the JSON object, no other text, no markdown code blocks, 
 
     console.log('🔍 Raw response from gpt-5-nano-2025-08-07:', content);
 
-    // Clean the content to handle any potential markdown formatting
+    // Enhanced cleaning logic to handle various response formats
     let cleanContent = content.trim();
     
     // Remove markdown code block delimiters if present
@@ -127,21 +129,27 @@ IMPORTANT: Return ONLY the JSON object, no other text, no markdown code blocks, 
     // Parse the JSON response
     const summary = JSON.parse(cleanContent) as TruthSummary;
     
-    console.log('✅ Successfully parsed analysis results');
+    console.log('✅ Successfully parsed gpt-5-nano-2025-08-07 analysis results');
+    console.log('📊 Analysis summary:', {
+      themes: summary.themes.length,
+      sentiment: summary.overall_sentiment,
+      emotional_tone: summary.emotional_tone.substring(0, 50) + '...'
+    });
+    
     return summary;
     
   } catch (error) {
     console.error('❌ gpt-5-nano-2025-08-07 analysis error:', error);
     
-    // If JSON parsing fails, log the content for debugging
+    // Enhanced error logging for JSON parsing issues
     if (error instanceof SyntaxError) {
       console.error('🔍 JSON Parse Error Details:', {
         error: error.message,
-        attemptedToParse: error.message.includes('not valid JSON') ? 'See raw response above' : 'Unknown'
+        note: 'gpt-5-nano-2025-08-07 may have returned non-JSON content'
       });
     }
     
-    throw new Error(`Analysis failed with gpt-5-nano-2025-08-07: ${error.message}`);
+    throw new Error(`gpt-5-nano-2025-08-07 analysis failed: ${error.message}`);
   }
 }
 
@@ -157,6 +165,7 @@ Deno.serve(async (req: Request) => {
   try {
     console.log('🔄 Truth Summarizer starting...');
     console.log('📅 Current timestamp:', new Date().toISOString());
+    console.log('🤖 Using model: gpt-5-nano-2025-08-07');
 
     // Initialize Supabase client with service role key for full access
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -234,7 +243,7 @@ Deno.serve(async (req: Request) => {
     const periodEnd = newTruths[newTruths.length - 1].created_at;
     const newLastProcessedTimestamp = periodEnd;
 
-    console.log('💾 Storing analysis results in truth_summaries table...');
+    console.log('💾 Storing gpt-5-nano-2025-08-07 analysis results in truth_summaries table...');
     
     const { data: insertedSummary, error: insertError } = await supabase
       .from('truth_summaries')
@@ -252,12 +261,13 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Failed to store analysis results: ${insertError.message}`);
     }
 
-    console.log(`✅ Successfully processed batch: ${insertedSummary.id}`);
+    console.log(`✅ Successfully processed batch with gpt-5-nano-2025-08-07: ${insertedSummary.id}`);
     
     // Step 6: Return success response with detailed information
     const responseData = {
       success: true,
-      message: `Successfully analyzed and summarized ${newTruths.length} new truths`,
+      message: `Successfully analyzed and summarized ${newTruths.length} new truths using gpt-5-nano-2025-08-07`,
+      model_used: 'gpt-5-nano-2025-08-07',
       summary_id: insertedSummary.id,
       processed_count: newTruths.length,
       period: {
@@ -273,7 +283,8 @@ Deno.serve(async (req: Request) => {
       next_scheduled_run: new Date(Date.now() + 60 * 60 * 1000).toISOString()
     };
 
-    console.log('🎉 Truth summarizer completed successfully:', {
+    console.log('🎉 Truth summarizer completed successfully with gpt-5-nano-2025-08-07:', {
+      model: 'gpt-5-nano-2025-08-07',
       summary_id: responseData.summary_id,
       processed: responseData.processed_count,
       sentiment: responseData.analysis_preview.overall_sentiment
@@ -291,12 +302,13 @@ Deno.serve(async (req: Request) => {
     );
 
   } catch (error) {
-    console.error('❌ Truth Summarizer failed:', error);
+    console.error('❌ Truth Summarizer with gpt-5-nano-2025-08-07 failed:', error);
     
     const errorResponse = {
       success: false,
       error: error.message,
-      message: 'Truth summarizer encountered an error',
+      message: 'Truth summarizer encountered an error with gpt-5-nano-2025-08-07',
+      model_attempted: 'gpt-5-nano-2025-08-07',
       timestamp: new Date().toISOString(),
       function: 'truth-summarizer'
     };
