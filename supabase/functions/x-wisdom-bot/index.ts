@@ -7,17 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-interface UserTruth {
-  id: string;
-  x_username: string;
-  first_question: string;
-  first_answer: string;
-  second_question: string;
-  second_answer: string;
-  generated_truth: string;
-  created_at: string;
-}
-
 interface TruthSummary {
   id: string;
   period_start: string;
@@ -133,10 +122,9 @@ function calculateWeights(summaries: TruthSummary[]): WeightedSummary[] {
 }
 
 async function generateWisdomFromSummaries(
-  weightedSummaries: WeightedSummary[],
-  freshTruths: UserTruth[]
+  weightedSummaries: WeightedSummary[]
 ): Promise<string> {
-  console.log('🧠 Generating wisdom from summaries and fresh truths...');
+  console.log('🧠 Generating wisdom from weighted summaries...');
 
   // Build context from weighted summaries
   const summaryContext = weightedSummaries.map(summary => {
@@ -150,17 +138,10 @@ Sentiment: ${summary_json.overall_sentiment}
 ---`;
   }).join('\n');
 
-  // Build context from fresh truths
-  const freshContext = freshTruths.length > 0 ? `
-FRESH INSIGHTS (Latest 3 truths):
-${freshTruths.map(truth => `@${truth.x_username}: "${truth.generated_truth}"`).join('\n')}
----` : '';
-
-  const prompt = `Based on these aggregated insights from our community and fresh contributions:
+  const prompt = `Based on these aggregated insights from our community:
 
 COMMUNITY PATTERNS (Weighted by volume and recency):
 ${summaryContext}
-${freshContext}
 
 Generate a single piece of profound wisdom (under 280 characters) that would resonate on social media. The wisdom should be:
 - Universally relatable and thought-provoking
@@ -185,7 +166,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    console.log('🤖 X Wisdom Bot starting with smart pipeline...');
+    console.log('🤖 X Wisdom Bot starting with summaries-only pipeline...');
 
     // Initialize Supabase client with service role key for full access
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -209,48 +190,19 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Database error fetching summaries: ${summariesError.message}`);
     }
 
-    // Step 2: Fetch 3 newest raw truths for freshness
-    console.log('🔄 Fetching fresh truths...');
-    const { data: freshTruths, error: freshTruthsError } = await supabase
-      .from('user_truths')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(3);
-
-    if (freshTruthsError) {
-      throw new Error(`Database error fetching fresh truths: ${freshTruthsError.message}`);
+    // Check if we have summaries to work with
+    if (!summaries || summaries.length === 0) {
+      throw new Error('No truth summaries found in database. Please run the truth-summarizer first to generate aggregated insights.');
     }
 
-    // Check if we have data to work with
-    if ((!summaries || summaries.length === 0) && (!freshTruths || freshTruths.length === 0)) {
-      throw new Error('No summaries or truths found in database');
-    }
+    // Step 2: Calculate weights for summaries
+    console.log(`📊 Processing ${summaries.length} summaries for wisdom generation`);
+    const weightedSummaries = calculateWeights(summaries);
 
-    let wisdom: string;
+    // Step 3: Generate wisdom using weighted summaries only
+    const wisdom = await generateWisdomFromSummaries(weightedSummaries);
 
-    if (summaries && summaries.length > 0) {
-      // Step 3: Calculate weights for summaries
-      console.log(`📊 Processing ${summaries.length} summaries for wisdom generation`);
-      const weightedSummaries = calculateWeights(summaries);
-
-      // Step 4: Generate wisdom using weighted summaries + fresh truths
-      wisdom = await generateWisdomFromSummaries(weightedSummaries, freshTruths || []);
-    } else {
-      // Fallback: Use only fresh truths if no summaries exist yet
-      console.log('⚠️  No summaries available, falling back to fresh truths only');
-      const freshContext = freshTruths!.map(truth => 
-        `@${truth.x_username}: "${truth.generated_truth}"`
-      ).join('\n');
-
-      const fallbackPrompt = `Based on these recent truth submissions:
-${freshContext}
-
-Generate a profound piece of wisdom (under 280 characters) that captures the essence of these insights and would resonate on social media. Return only the wisdom statement.`;
-
-      wisdom = await callGrokAPI(fallbackPrompt);
-    }
-
-    // Step 5: Post the wisdom to X
+    // Step 4: Post the wisdom to X
     console.log('📤 Posting wisdom to X/Twitter...');
     await postTweet(wisdom);
 
@@ -259,10 +211,9 @@ Generate a profound piece of wisdom (under 280 characters) that captures the ess
       wisdom,
       context: {
         summaries_used: summaries?.length || 0,
-        fresh_truths_used: freshTruths?.length || 0,
         total_context_truths: summaries?.reduce((sum, s) => sum + s.truth_count, 0) || 0
       },
-      message: 'Wisdom generated and tweeted successfully using smart pipeline'
+      message: 'Wisdom generated and tweeted successfully using summaries-only pipeline'
     };
 
     console.log('✅ Wisdom bot completed successfully:', responseData);
@@ -285,7 +236,7 @@ Generate a profound piece of wisdom (under 280 characters) that captures the ess
       JSON.stringify({ 
         success: false, 
         error: error.message,
-        message: 'Failed to generate and post wisdom using smart pipeline'
+        message: 'Failed to generate and post wisdom using summaries-only pipeline'
       }),
       {
         headers: {
