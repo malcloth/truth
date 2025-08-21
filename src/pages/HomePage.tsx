@@ -1,7 +1,6 @@
 import React from 'react';
 import { Search, ArrowRight, RotateCcw } from 'lucide-react';
 import { supabase, UserTruth } from '../lib/supabase';
-import OpenAI from 'openai';
 
 function HomePage() {
   const [currentStep, setCurrentStep] = React.useState(0);
@@ -14,57 +13,36 @@ function HomePage() {
   const [firstQuestion, setFirstQuestion] = React.useState('');
   const [secondQuestion, setSecondQuestion] = React.useState('');
 
-  const callOpenAIAPI = async (prompt) => {
+  const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth', firstAnswer?: string, secondAnswer?: string) => {
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error('VITE_OPENAI_API_KEY environment variable is not set');
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-truth`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type,
+          firstAnswer,
+          secondAnswer
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const openai = new OpenAI({
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true
-      });
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate content');
+      }
 
-      const response = await openai.chat.completions.create({
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a wise, introspective guide who asks profound questions that help people discover their inner truths. Keep responses concise and thought-provoking.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        model: 'gpt-5-nano-2025-08-07'
-      });
-
-      return response.choices[0].message.content?.trim() || '';
+      return data.result;
     } catch (error) {
-      console.error('OpenAI API error:', error.message);
+      console.error('Generate Truth API error:', error);
       throw error;
     }
-  };
-
-  const generateFirstQuestion = async () => {
-    const prompt = 'Generate one profound, introspective question that helps someone discover a deep truth about themselves. The question should be thought-provoking and personal. Return only the question, no additional text.';
-    return await callOpenAIAPI(prompt);
-  };
-
-  const generateSecondQuestion = async (firstAnswer) => {
-    const prompt = `Based on this person's answer: "${firstAnswer}", generate a follow-up question that digs deeper into their psyche and helps reveal another layer of their inner truth. The question should be related but explore a different aspect of their personality or beliefs. Return only the question, no additional text.`;
-    return await callOpenAIAPI(prompt);
-  };
-
-  const generateTruth = async (firstAnswer, secondAnswer) => {
-    const prompt = `Based on these two answers:
-1. "${firstAnswer}"
-2. "${secondAnswer}"
-
-Generate a profound, 6-8 word truth about this person that captures their essence or reveals something meaningful about their character. The truth should be insightful, positive, and feel like a revelation. Return only the truth statement, no quotes or additional text.`;
-    return await callOpenAIAPI(prompt);
   };
 
   const storeTruthInDatabase = async () => {
@@ -109,17 +87,17 @@ Generate a profound, 6-8 word truth about this person that captures their essenc
     
     try {
       if (currentStep === 0 && xUsername.trim()) {
-        const question = await generateFirstQuestion();
+        const question = await callGenerateTruthAPI('first_question');
         setCurrentQuestion(question);
         setFirstQuestion(question);
         setCurrentStep(1);
       } else if (currentStep === 1 && firstAnswer.trim() && getWordCount(firstAnswer) <= 15) {
-        const question = await generateSecondQuestion(firstAnswer);
+        const question = await callGenerateTruthAPI('second_question', firstAnswer);
         setCurrentQuestion(question);
         setSecondQuestion(question);
         setCurrentStep(2);
       } else if (currentStep === 2 && secondAnswer.trim() && getWordCount(secondAnswer) <= 15) {
-        const truth = await generateTruth(firstAnswer, secondAnswer);
+        const truth = await callGenerateTruthAPI('generate_truth', firstAnswer, secondAnswer);
         setGeneratedTruth(truth);
         setCurrentStep(3);
         // Store the complete truth data in Supabase
