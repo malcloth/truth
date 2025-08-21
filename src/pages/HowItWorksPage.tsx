@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, CheckCircle, MessageSquare, Sparkles, Share2 } from 'lucide-react';
+import CommunityContextDiagram from '../components/CommunityContextDiagram';
 
 interface Chapter {
   id: string;
@@ -124,11 +125,35 @@ function HowItWorksPage() {
 
               {/* Text Content */}
               <div className="text-white/70 text-lg leading-relaxed max-w-4xl mx-auto space-y-6">
-                {currentChapter.text.split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="leading-relaxed">
-                    {paragraph}
-                  </p>
-                ))}
+                {currentChapter.id === 'community-context-ai' ? (
+                  <>
+                    <p className="leading-relaxed">
+                      This is a proprietary system for scaling user inputs into AI context.
+                    </p>
+                    <p className="leading-relaxed">
+                      For the longest time, AI context has been closed - controlled by companies, trained on scraped data. Truth makes context open to the public, meaning anyone can contribute to training the bot.
+                    </p>
+                    
+                    {/* Diagram */}
+                    <CommunityContextDiagram />
+                    
+                    <p className="leading-relaxed">
+                      Here's how it works: A swarm of sub-agents summarize user inputs in randomized pools, which then inform a larger agent. This lets us scale to thousands of community contributions without overwhelming or contradicting the AI.
+                    </p>
+                    <p className="leading-relaxed">
+                      Think of it like this: Every time someone participates, they're adding a drop to an ocean of consciousness. Each drop changes the current, and eventually, the entire ocean thinks differently.
+                    </p>
+                    <p className="leading-relaxed">
+                      The Truth bot is just the first application of this context tech. More applications coming soon.
+                    </p>
+                  </>
+                ) : (
+                  currentChapter.text.split('\n\n').map((paragraph, index) => (
+                    <p key={index} className="leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))
+                )}
                 
                 {/* Special CTA for the last chapter */}
                 {currentChapter.id === 'try-it-now' && (
