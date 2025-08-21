@@ -91,13 +91,21 @@ function HomePage() {
         setSecondQuestion(response.result);
         setCurrentStep(2);
       } else if (currentStep === 2 && secondAnswer.trim() && getWordCount(secondAnswer) <= 15) {
+        console.log('🖼️ Calling API to generate truth and PNG...');
         const response = await callGenerateTruthAPI('generate_truth', firstAnswer, secondAnswer, xUsername, firstQuestion, secondQuestion);
+        console.log('📦 API Response:', response);
         setGeneratedTruth(response.result);
-        setShareablePngBase64(response.shareablePngBase64);
+        if (response.shareablePngBase64) {
+          console.log('🖼️ PNG received successfully, length:', response.shareablePngBase64.length);
+          setShareablePngBase64(response.shareablePngBase64);
+        } else {
+          console.warn('⚠️ No PNG data received in response');
+        }
         setCurrentStep(3);
       }
     } catch (error) {
       console.error('Error generating content:', error);
+      console.error('Error details:', error.message);
       // Fallback to default behavior if API fails
       if (currentStep === 0) {
         setCurrentQuestion("What drives your deepest fears about the future?");

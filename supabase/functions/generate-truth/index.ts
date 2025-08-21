@@ -115,13 +115,19 @@ Generate a profound, 6-8 word truth about this person that captures their essenc
 async function generateShareablePNG(truth: string, username: string): Promise<string> {
   try {
     console.log('🎨 Generating shareable PNG...');
+    console.log('🔍 Truth text:', truth);
+    console.log('🔍 Username:', username);
     
     // Replace placeholders in SVG template
     const svgString = SVG_TEMPLATE
       .replace('{{TRUTH_TEXT}}', truth)
       .replace('{{USERNAME}}', username);
     
+    console.log('🔍 SVG string length:', svgString.length);
+    console.log('🔍 First 200 chars of SVG:', svgString.substring(0, 200));
+    
     // Convert SVG to PNG using resvg-js
+    console.log('🔧 Initializing Resvg...');
     const resvg = new Resvg(svgString, {
       fitTo: {
         mode: 'width',
@@ -129,17 +135,25 @@ async function generateShareablePNG(truth: string, username: string): Promise<st
       },
     });
     
+    console.log('🔧 Rendering PNG...');
     const pngData = resvg.render();
+    console.log('🔧 Getting PNG buffer...');
     const pngBuffer = pngData.asPng();
+    console.log('🔍 PNG buffer size:', pngBuffer.length);
     
     // Convert to Base64
+    console.log('🔧 Converting to Base64...');
     const base64String = btoa(String.fromCharCode(...new Uint8Array(pngBuffer)));
+    console.log('🔍 Base64 string length:', base64String.length);
     
     console.log('✅ PNG generated successfully');
     return base64String;
     
   } catch (error) {
     console.error('❌ Error generating PNG:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error name:', error.name);
+    console.error('❌ Error message:', error.message);
     throw new Error(`PNG generation failed: ${error.message}`);
   }
 }
@@ -217,9 +231,12 @@ Deno.serve(async (req: Request) => {
         result = await generateTruth(requestData.firstAnswer, requestData.secondAnswer);
         
         // Generate shareable PNG
+        console.log('🖼️ Starting PNG generation process...');
         const shareablePngBase64 = await generateShareablePNG(result, requestData.xUsername);
+        console.log('🖼️ PNG generation completed successfully');
         
         // Store the complete truth data in database
+        console.log('💾 Storing truth data in database...');
         const userTruthData: UserTruth = {
           x_username: requestData.xUsername,
           first_question: requestData.firstQuestion,
@@ -230,8 +247,10 @@ Deno.serve(async (req: Request) => {
         };
         
         await storeTruthInDatabase(userTruthData);
+        console.log('💾 Database storage completed successfully');
         
         // Return both the truth and the PNG
+        console.log('📤 Returning response with truth and PNG...');
         return new Response(
           JSON.stringify({ 
             success: true, 
