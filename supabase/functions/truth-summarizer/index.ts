@@ -67,7 +67,7 @@ Please analyze these truths and return a structured JSON response with the follo
 Focus on deep psychological patterns, recurring themes, and meaningful insights that could inform wisdom creation. Be concise but insightful.`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Using gpt-4o-mini as it's available and efficient
+      model: 'gpt-5-nano-2025-08-07', // Using gpt-5-nano as specified
       messages: [
         {
           role: 'system',
@@ -84,14 +84,14 @@ Focus on deep psychological patterns, recurring themes, and meaningful insights 
 
     const content = response.choices[0].message.content;
     if (!content) {
-      throw new Error('No content received from GPT-4o-mini');
+      throw new Error('No content received from gpt-5-nano-2025-08-07');
     }
 
     // Parse the JSON response
     const summary = JSON.parse(content) as TruthSummary;
     return summary;
   } catch (error) {
-    console.error('GPT-4o-mini API error:', error);
+    console.error('gpt-5-nano-2025-08-07 API error:', error);
     throw error;
   }
 }
