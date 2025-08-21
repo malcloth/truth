@@ -53,7 +53,7 @@ function HowItWorksPage() {
   const currentChapter = chapters.find(chapter => chapter.id === activeChapter) || chapters[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 via-green-300 to-yellow-300">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-sky-200 to-yellow-100">
       {/* Navigation */}
       <nav className="px-4 md:px-8 py-4 md:py-6 relative z-10">
         <div className="flex items-center justify-between">

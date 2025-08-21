@@ -156,7 +156,7 @@ function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 via-green-300 to-yellow-300 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-sky-200 to-yellow-100 relative overflow-hidden">
       {/* Navigation */}
       <nav className="px-4 md:px-8 py-4 md:py-6 relative z-10">
         {/* Mobile Layout */}
