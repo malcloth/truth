@@ -174,7 +174,7 @@ Deno.serve(async (req: Request) => {
     console.log(`📊 Found ${newTruths.length} new truths to process`);
 
     // Step 4: Send new truths to GPT-4o-mini for analysis
-    console.log('🤖 Analyzing truths with GPT-4o-mini...');
+    console.log('🤖 Analyzing truths with gpt-5-nano-2025-08-07...');
     const summaryJson = await callGPT5Nano(newTruths);
 
     // Step 5: Store the summary with metadata
