@@ -97,7 +97,7 @@ IMPORTANT: Return ONLY the JSON object, no other text, no markdown code blocks, 
         }
       ],
       temperature: 0.2,
-      max_tokens: 1500,
+      max_completion_tokens: 1500,
     });
 
     const content = response.choices[0].message.content;
