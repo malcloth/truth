@@ -96,7 +96,6 @@ IMPORTANT: Return ONLY the JSON object, no other text, no markdown code blocks, 
           content: analysisPrompt
         }
       ],
-      temperature: 0.2,
       max_completion_tokens: 1500,
       reasoning_effort: "high",
       verbosity: "low",
