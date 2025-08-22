@@ -174,7 +174,14 @@ function HomePage() {
               </div>
             </div>
             <button className="bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full font-medium hover:bg-black/70 transition-colors border border-white/10 text-sm">
-              $TRUTH
+              <a 
+                href="https://heaven.xyz/token/FvDsYRpB5zEuPKjuVBPAu8RkXbL8VE4ujcj6GRB9A777" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block"
+              >
+                $TRUTH
+              </a>
             </button>
           </div>
           
@@ -214,9 +221,14 @@ function HomePage() {
                 </span>
               </div>
             </div>
-            <button className="bg-black/60 backdrop-blur-sm text-white px-6 py-3 rounded-full font-medium hover:bg-black/70 transition-colors border border-white/10 text-base">
+            <a 
+              href="https://heaven.xyz/token/FvDsYRpB5zEuPKjuVBPAu8RkXbL8VE4ujcj6GRB9A777" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-black/60 backdrop-blur-sm text-white px-6 py-3 rounded-full font-medium hover:bg-black/70 transition-colors border border-white/10 text-base"
+            >
               $TRUTH
-            </button>
+            </a>
           </div>
         </div>
       </nav>
