@@ -65,7 +65,6 @@ function HomePage() {
     return () => clearInterval(bubbleInterval);
   }, []);
 
-  const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth', firstAnswer?: string, secondAnswer?: string, xUsername?: string, firstQuestion?: string, secondQuestion?: string) => {
   const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth' | 'submit_wisdom', firstAnswer?: string, secondAnswer?: string, xUsername?: string, firstQuestion?: string, secondQuestion?: string, wisdomText?: string) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-truth`, {
@@ -434,6 +433,9 @@ function HomePage() {
                   </div>
                 </div>
               )}
+
+              {/* Step 2: First Question */}
+              {currentStep === 2 && (
                 <div className="space-y-6">
                   <div className="text-center mb-8">
                     <p className="text-white/80 text-lg mb-4">
@@ -539,6 +541,9 @@ function HomePage() {
                   </div>
                 </div>
               )}
+
+              {/* Step 5: Truth Result */}
+              {currentStep === 5 && (
                 <div className="text-center space-y-8">
                   <div>
                     <p className="text-white/60 text-sm mb-4">Your truth is:</p>
