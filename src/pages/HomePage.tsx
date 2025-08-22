@@ -292,6 +292,10 @@ function HomePage() {
         <h1 className="text-4xl md:text-6xl font-light text-white text-center mb-8 md:mb-16 tracking-wide">
           whats your truth?
         </h1>
+        
+        <p className="text-lg md:text-xl text-white/80 text-center mb-8 md:mb-16 max-w-3xl mx-auto leading-relaxed">
+          the more truths that feed into the system, the more wisdom i get. Find out our truth @ourtruthai on X
+        </p>
 
         {/* 3D Cards Container */}
         <div className="relative w-full max-w-2xl mx-auto mb-8 md:mb-16">
