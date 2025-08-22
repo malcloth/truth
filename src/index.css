@@ -32,3 +32,27 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
+
+/* Floating bubble animation */
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0px) scale(0.8);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px) scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-80px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-100px) scale(0.8);
+  }
+}
+
+.animate-float-up {
+  animation: float-up 4s ease-out forwards;
+}

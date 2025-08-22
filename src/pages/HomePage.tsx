@@ -13,6 +13,7 @@ function HomePage() {
   const [firstQuestion, setFirstQuestion] = React.useState('');
   const [secondQuestion, setSecondQuestion] = React.useState('');
   const [loadingMessageIndex, setLoadingMessageIndex] = React.useState(0);
+  const [bubbles, setBubbles] = React.useState([]);
 
   const loadingMessages = [
     "your question is coming...",
@@ -35,6 +36,32 @@ function HomePage() {
       return () => clearInterval(interval);
     }
   }, [isLoading, loadingMessages.length]);
+
+  // Bubble animation effect
+  React.useEffect(() => {
+    const createBubble = () => {
+      const id = Date.now() + Math.random();
+      const bubble = {
+        id,
+        left: Math.random() * 200 - 50, // Random position around logo (-50px to 150px from center)
+        delay: Math.random() * 2, // Random delay 0-2 seconds
+      };
+      
+      setBubbles(prev => [...prev, bubble]);
+      
+      // Remove bubble after animation completes
+      setTimeout(() => {
+        setBubbles(prev => prev.filter(b => b.id !== id));
+      }, 4000 + bubble.delay * 1000);
+    };
+
+    // Create bubbles at random intervals
+    const bubbleInterval = setInterval(() => {
+      createBubble();
+    }, Math.random() * 3000 + 2000); // Random interval 2-5 seconds
+
+    return () => clearInterval(bubbleInterval);
+  }, []);
 
   const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth', firstAnswer?: string, secondAnswer?: string, xUsername?: string, firstQuestion?: string, secondQuestion?: string) => {
     try {
@@ -236,12 +263,30 @@ function HomePage() {
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center px-4 md:px-8 py-8 md:py-16 relative z-10">
         {/* Logo */}
-        <div className="mb-8 md:mb-12">
+        <div className="mb-8 md:mb-12 relative">
           <img 
             src="/Untitled (5000 x 5000 px).png" 
             alt="Truth Logo" 
             className="w-20 h-20 md:w-24 md:h-24 object-contain"
           />
+          
+          {/* Floating Bubbles */}
+          {bubbles.map((bubble) => (
+            <div
+              key={bubble.id}
+              className="absolute pointer-events-none animate-float-up"
+              style={{
+                left: `calc(50% + ${bubble.left}px)`,
+                top: '50%',
+                animationDelay: `${bubble.delay}s`,
+                transform: 'translateX(-50%)',
+              }}
+            >
+              <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium border border-white/30 whitespace-nowrap shadow-lg">
+                +1 Truth
+              </div>
+            </div>
+          ))}
         </div>
         
         <h1 className="text-4xl md:text-6xl font-light text-white text-center mb-8 md:mb-16 tracking-wide">
