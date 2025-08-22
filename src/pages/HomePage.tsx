@@ -4,9 +4,11 @@ import { supabase } from '../lib/supabase';
 
 function HomePage() {
   const [currentStep, setCurrentStep] = React.useState(0);
+  const [selectedFlow, setSelectedFlow] = React.useState<'truth' | 'wisdom' | null>(null);
   const [xUsername, setXUsername] = React.useState('');
   const [firstAnswer, setFirstAnswer] = React.useState('');
   const [secondAnswer, setSecondAnswer] = React.useState('');
+  const [wisdomText, setWisdomText] = React.useState('');
   const [generatedTruth, setGeneratedTruth] = React.useState('');
   const [currentQuestion, setCurrentQuestion] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
@@ -64,6 +66,7 @@ function HomePage() {
   }, []);
 
   const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth', firstAnswer?: string, secondAnswer?: string, xUsername?: string, firstQuestion?: string, secondQuestion?: string) => {
+  const callGenerateTruthAPI = async (type: 'first_question' | 'second_question' | 'generate_truth' | 'submit_wisdom', firstAnswer?: string, secondAnswer?: string, xUsername?: string, firstQuestion?: string, secondQuestion?: string, wisdomText?: string) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-truth`, {
         method: 'POST',
@@ -77,7 +80,8 @@ function HomePage() {
           secondAnswer,
           xUsername,
           firstQuestion,
-          secondQuestion
+          secondQuestion,
+          wisdomText
         })
       });
 
@@ -107,37 +111,49 @@ function HomePage() {
     
     try {
       if (currentStep === 0 && xUsername.trim()) {
+        // Move to flow selection step
+        setCurrentStep(1);
+      } else if (currentStep === 1 && selectedFlow === 'truth') {
         const response = await callGenerateTruthAPI('first_question');
         setCurrentQuestion(response.result);
         setFirstQuestion(response.result);
-        setCurrentStep(1);
-      } else if (currentStep === 1 && firstAnswer.trim() && getWordCount(firstAnswer) <= 15) {
+        setCurrentStep(2);
+      } else if (currentStep === 1 && selectedFlow === 'wisdom') {
+        setCurrentStep(4); // Jump to wisdom input step
+      } else if (currentStep === 2 && firstAnswer.trim() && getWordCount(firstAnswer) <= 15) {
         const response = await callGenerateTruthAPI('second_question', firstAnswer);
         setCurrentQuestion(response.result);
         setSecondQuestion(response.result);
-        setCurrentStep(2);
-      } else if (currentStep === 2 && secondAnswer.trim() && getWordCount(secondAnswer) <= 15) {
+        setCurrentStep(3);
+      } else if (currentStep === 3 && secondAnswer.trim() && getWordCount(secondAnswer) <= 15) {
         console.log('✨ Calling API to generate truth...');
         const response = await callGenerateTruthAPI('generate_truth', firstAnswer, secondAnswer, xUsername, firstQuestion, secondQuestion);
         console.log('📦 Truth generated:', response.result);
         setGeneratedTruth(response.result);
-        setCurrentStep(3);
+        setCurrentStep(5); // Truth result step
+      } else if (currentStep === 4 && wisdomText.trim() && getWordCount(wisdomText) <= 15) {
+        console.log('🧠 Submitting wisdom...');
+        const response = await callGenerateTruthAPI('submit_wisdom', undefined, undefined, xUsername, undefined, undefined, wisdomText);
+        console.log('✅ Wisdom submitted successfully');
+        setCurrentStep(6); // Wisdom success step
       }
     } catch (error) {
       console.error('Error generating content:', error);
       console.error('Error details:', error.message);
       // Fallback to default behavior if API fails
       if (currentStep === 0) {
+        setCurrentStep(1);
+      } else if (currentStep === 1 && selectedFlow === 'truth') {
         setCurrentQuestion("What drives your deepest fears about the future?");
         setFirstQuestion("What drives your deepest fears about the future?");
-        setCurrentStep(1);
-      } else if (currentStep === 1) {
-        setCurrentQuestion("When do you feel most authentic and true to yourself?");
-        setSecondQuestion("When do you feel most authentic and true to yourself?");
         setCurrentStep(2);
       } else if (currentStep === 2) {
-        setGeneratedTruth("You are braver than you believe");
+        setCurrentQuestion("When do you feel most authentic and true to yourself?");
+        setSecondQuestion("When do you feel most authentic and true to yourself?");
         setCurrentStep(3);
+      } else if (currentStep === 3) {
+        setGeneratedTruth("You are braver than you believe");
+        setCurrentStep(5);
       }
     } finally {
       setIsLoading(false);
@@ -158,9 +174,11 @@ function HomePage() {
 
   const handleStartOver = () => {
     setCurrentStep(0);
+    setSelectedFlow(null);
     setXUsername('');
     setFirstAnswer('');
     setSecondAnswer('');
+    setWisdomText('');
     setGeneratedTruth('');
     setFirstQuestion('');
     setSecondQuestion('');
@@ -177,8 +195,10 @@ function HomePage() {
   const canProceed = () => {
     if (isLoading) return false;
     if (currentStep === 0) return xUsername.trim() !== '';
-    if (currentStep === 1) return firstAnswer.trim() !== '' && getWordCount(firstAnswer) <= 15;
-    if (currentStep === 2) return secondAnswer.trim() !== '' && getWordCount(secondAnswer) <= 15;
+    if (currentStep === 1) return selectedFlow !== null;
+    if (currentStep === 2) return firstAnswer.trim() !== '' && getWordCount(firstAnswer) <= 15;
+    if (currentStep === 3) return secondAnswer.trim() !== '' && getWordCount(secondAnswer) <= 15;
+    if (currentStep === 4) return wisdomText.trim() !== '' && getWordCount(wisdomText) <= 15;
     return false;
   };
 
@@ -308,13 +328,16 @@ function HomePage() {
                 </div>
                 <h3 className="text-white text-base md:text-lg font-medium">
                   {currentStep === 0 && "What's your X username?"}
-                  {currentStep === 1 && "First question"}
-                  {currentStep === 2 && "One more question"}
-                  {currentStep === 3 && "Your truth"}
+                  {currentStep === 1 && "Choose your path"}
+                  {currentStep === 2 && "First question"}
+                  {currentStep === 3 && "One more question"}
+                  {currentStep === 4 && "Share your wisdom"}
+                  {currentStep === 5 && "Your truth"}
+                  {currentStep === 6 && "Wisdom shared"}
                 </h3>
               </div>
               <div className="text-white/40 text-sm">
-                {currentStep < 3 ? `${currentStep + 1} of 4` : "Complete"}
+                {currentStep < 5 ? `${currentStep + 1} of ${selectedFlow === 'wisdom' ? '3' : '4'}` : "Complete"}
               </div>
             </div>
 
@@ -366,8 +389,51 @@ function HomePage() {
                 </div>
               )}
 
-              {/* Step 1: First Question */}
+              {/* Step 1: Flow Selection */}
               {currentStep === 1 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <p className="text-white/80 text-lg mb-4">
+                      Choose your path, @{xUsername}
+                    </p>
+                    <p className="text-white/60 text-sm">
+                      Discover your truth or contribute wisdom to shape the AI
+                    </p>
+                  </div>
+                  <div className="grid gap-4">
+                    <button
+                      onClick={() => {
+                        setSelectedFlow('truth');
+                        handleNext();
+                      }}
+                      className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-6 rounded-2xl font-medium transition-colors border border-white/10 text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-lg font-medium mb-2">🔮 Find your truth</h4>
+                          <p className="text-white/60 text-sm">Answer two AI questions to discover a revealing truth about yourself</p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-white/40" />
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedFlow('wisdom');
+                        handleNext();
+                      }}
+                      className="w-full bg-white/10 hover:bg-white/20 text-white px-6 py-6 rounded-2xl font-medium transition-colors border border-white/10 text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-lg font-medium mb-2">🧠 Tell us your wisdom</h4>
+                          <p className="text-white/60 text-sm">Share insights that will directly influence the AI's personality</p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-white/40" />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
                 <div className="space-y-6">
                   <div className="text-center mb-8">
                     <p className="text-white/80 text-lg mb-4">
@@ -402,8 +468,8 @@ function HomePage() {
                 </div>
               )}
 
-              {/* Step 2: Second Question */}
-              {currentStep === 2 && (
+              {/* Step 3: Second Question */}
+              {currentStep === 3 && (
                 <div className="space-y-6">
                   <div className="text-center mb-8">
                     <p className="text-white/80 text-lg mb-4">
@@ -438,8 +504,41 @@ function HomePage() {
                 </div>
               )}
 
-              {/* Step 3: Truth Display */}
-              {currentStep === 3 && (
+              {/* Step 4: Wisdom Input */}
+              {currentStep === 4 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <p className="text-white/80 text-lg mb-4">
+                      What's your wisdom?
+                    </p>
+                    <p className="text-white/60 text-sm">
+                      Share insights that will directly influence the AI and shape its personality over time. Limit: 15 words.
+                    </p>
+                  </div>
+                  <div className="relative">
+                    <textarea
+                      value={wisdomText}
+                      onChange={(e) => handleTextareaChange(e.target.value, setWisdomText)}
+                      placeholder="Your wisdom..."
+                      className="w-full bg-white/10 text-white placeholder-white/40 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-white/30 transition-all text-lg resize-none"
+                      rows={3}
+                    />
+                    <div className={`absolute bottom-3 right-4 text-sm ${
+                      getWordCount(wisdomText) > 15 ? 'text-red-400' : 'text-white/40'
+                    }`}>
+                      {getWordCount(wisdomText)}/15 words
+                    </div>
+                    {/* Mobile Submit Button */}
+                    <button 
+                      onClick={handleNext}
+                      disabled={!canProceed()}
+                      className="md:hidden absolute bottom-3 left-4 bg-white text-black px-4 py-1 rounded-full text-sm font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? 'Sharing...' : 'Share'}
+                    </button>
+                  </div>
+                </div>
+              )}
                 <div className="text-center space-y-8">
                   <div>
                     <p className="text-white/60 text-sm mb-4">Your truth is:</p>
@@ -461,22 +560,56 @@ function HomePage() {
                   </div>
                 </div>
               )}
+              
+              {/* Step 6: Wisdom Success */}
+              {currentStep === 6 && (
+                <div className="text-center space-y-8">
+                  <div>
+                    <p className="text-white/60 text-sm mb-4">Thank you for sharing your wisdom:</p>
+                    <h2 className="text-2xl font-light text-white mb-6 leading-relaxed">
+                      "{wisdomText}"
+                    </h2>
+                    <p className="text-white/80 text-lg mb-6">@{xUsername}</p>
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <p className="text-white/60 text-sm mb-4">
+                      Your wisdom has been added to the collective consciousness. It will help shape the AI's personality and influence future posts from @ourtruthai.
+                    </p>
+                    <div className="flex flex-col space-y-3">
+                      <a
+                        href="https://twitter.com/ourtruthai"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-6 py-4 rounded-xl font-medium transition-colors border border-blue-400/20 flex items-center justify-center"
+                      >
+                        <span className="mr-2">🐦</span>
+                        Follow @ourtruthai
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex space-x-6">
-          {currentStep < 3 ? (
+          {(currentStep < 5 && currentStep !== 1) ? (
             <button 
               onClick={handleNext}
               disabled={!canProceed()}
               className="hidden md:flex bg-black/60 backdrop-blur-sm text-white px-8 py-4 rounded-full font-medium hover:bg-black/70 transition-colors border border-white/10 items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowRight className="w-5 h-5 mr-2" />
-              {isLoading ? 'Loading...' : (currentStep === 2 ? 'Get my truth' : 'Submit')}
+              {isLoading ? 'Loading...' : (
+                currentStep === 3 ? 'Get my truth' : 
+                currentStep === 4 ? 'Share wisdom' : 
+                'Submit'
+              )}
             </button>
-          ) : (
+          ) : (currentStep === 5 || currentStep === 6) ? (
             <button 
               onClick={handleStartOver}
               className="bg-black/60 backdrop-blur-sm text-white px-8 py-4 rounded-full font-medium hover:bg-black/70 transition-colors border border-white/10 flex items-center"

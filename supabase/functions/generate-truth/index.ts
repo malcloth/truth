@@ -17,12 +17,13 @@ const corsHeaders = {
 };
 
 interface GenerationRequest {
-  type: 'first_question' | 'second_question' | 'generate_truth';
+  type: 'first_question' | 'second_question' | 'generate_truth' | 'submit_wisdom';
   xUsername?: string;
   firstQuestion?: string;
   secondQuestion?: string;
   firstAnswer?: string;
   secondAnswer?: string;
+  wisdomText?: string;
 }
 
 
@@ -111,6 +112,44 @@ async function storeTruthInDatabase(userTruthData: UserTruth) {
   }
 }
 
+async function storeWisdomInDatabase(xUsername: string, wisdomText: string) {
+  console.log('🧠 storeWisdomInDatabase called - starting database insertion...');
+  
+  try {
+    // Initialize Supabase client with service role key for bypassing RLS
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    
+    const wisdomData = {
+      x_username: xUsername,
+      wisdom_text: wisdomText
+    };
+    
+    console.log('📤 Wisdom data to be inserted:', wisdomData);
+    
+    const { data, error } = await supabase
+      .from('wisdoms')
+      .insert([wisdomData]);
+
+    if (error) {
+      console.error('❌ Error storing wisdom in database:', error);
+      throw error;
+    } else {
+      console.log('✅ Wisdom stored successfully in database');
+      console.log('✅ Inserted wisdom data response:', data);
+    }
+  } catch (error) {
+    console.error('💥 Unexpected error in storeWisdomInDatabase:', error);
+    throw error;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -170,6 +209,30 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({ 
             success: true, 
             result: result,
+            type: requestData.type
+          }),
+          {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+            },
+            status: 200,
+          }
+        );
+        break;
+
+      case 'submit_wisdom':
+        if (!requestData.wisdomText || !requestData.xUsername) {
+          throw new Error('Wisdom text and username are required');
+        }
+        console.log('🧠 Storing wisdom...');
+        await storeWisdomInDatabase(requestData.xUsername, requestData.wisdomText);
+        console.log('💾 Wisdom storage completed successfully');
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Wisdom stored successfully',
             type: requestData.type
           }),
           {
