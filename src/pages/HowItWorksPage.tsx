@@ -40,6 +40,13 @@ const chapters: Chapter[] = [
     icon: <Share2 className="w-5 h-5" />
   },
   {
+    id: 'core-use-cases',
+    title: 'Core Use Cases',
+    subtitle: 'Applications powered by community-context technology',
+    text: 'Developer Tools & Platforms\n\nIDE assistants where entire engineering teams contribute codebase context, tribal knowledge, and architectural decisions. Documentation systems where users flag outdated info or add clarifications that immediately improve AI responses for everyone. Customer support bots that learn from agent corrections in real-time.\n\nCommunity/Consumer Applications\n\nNiche communities (gaming wikis, hobbyist forums) where enthusiasts contribute domain expertise the base model lacks. Collaborative research tools where teams build shared context for a project. "Bring your own truth" apps where users explicitly control what the AI knows about them—a transparent alternative to opaque personalization.\n\nEnterprise\n\nInternal knowledge management where employees contribute context about processes, decisions, and institutional knowledge. Compliance and legal tools where domain experts can inject regulatory updates.\n\nTrust & Transparency\n\nPosition it as the "open source" approach to AI context—users can audit, contribute, and fork context sets. This appeals to communities skeptical of black-box AI personalization.',
+    icon: <MessageSquare className="w-5 h-5" />
+  },
+  {
     id: 'try-it-now',
     title: 'Try It Out Now',
     subtitle: 'Get your truth. Contribute to the collective. Shape the future of AI.',
