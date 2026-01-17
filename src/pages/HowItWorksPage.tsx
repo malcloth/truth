@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, MessageSquare, Sparkles, Share2 } from 'lucide-react';
 import CommunityContextDiagram from '../components/CommunityContextDiagram';
 
@@ -51,6 +51,14 @@ const chapters: Chapter[] = [
 function HowItWorksPage() {
   const [activeChapter, setActiveChapter] = useState(chapters[0].id);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const chapterParam = params.get('chapter');
+    if (chapterParam && chapters.some(c => c.id === chapterParam)) {
+      setActiveChapter(chapterParam);
+    }
+  }, []);
+
   const currentChapter = chapters.find(chapter => chapter.id === activeChapter) || chapters[0];
 
   return (
@@ -58,16 +66,37 @@ function HowItWorksPage() {
       {/* Navigation */}
       <nav className="px-4 md:px-8 py-4 md:py-6 relative z-10">
         <div className="flex items-center justify-between">
-          <a 
-            href="/"
-            className="flex items-center text-white hover:text-white/80 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Truth
-          </a>
-          
+          <div className="flex items-center space-x-6">
+            <a
+              href="/"
+              className="flex items-center text-white hover:text-white/80 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Back to Truth
+            </a>
+
+            <div className="hidden md:flex items-center space-x-6">
+              <a href="/" className="text-white text-base font-medium hover:text-white/80 transition-colors">
+                Find your truth
+              </a>
+              <a href="/how-it-works" className="text-white text-base font-medium hover:text-white/80 transition-colors">
+                How it works
+              </a>
+              <a href="/how-it-works?chapter=truth-api" className="text-white text-base font-medium hover:text-white/80 transition-colors">
+                Truth API
+              </a>
+            </div>
+          </div>
+
           <button className="bg-black/60 backdrop-blur-sm text-white px-6 py-3 rounded-full font-medium hover:bg-black/70 transition-colors border border-white/10 text-base">
-            $TRUTH
+            <a
+              href="https://heaven.xyz/token/FvDsYRpB5zEuPKjuVBPAu8RkXbL8VE4ujcj6GRB9A777"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              $TRUTH
+            </a>
           </button>
         </div>
       </nav>

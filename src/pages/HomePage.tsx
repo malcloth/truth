@@ -232,12 +232,15 @@ function HomePage() {
           </div>
           
           {/* Bottom row - Navigation links */}
-          <div className="flex items-center justify-center space-x-6">
+          <div className="flex items-center justify-center space-x-4">
             <a href="#" className="text-white text-sm font-medium hover:text-white/80 transition-colors">
               Find your truth
             </a>
             <a href="/how-it-works" className="text-white text-sm font-medium hover:text-white/80 transition-colors">
               How it works
+            </a>
+            <a href="/how-it-works?chapter=truth-api" className="text-white text-sm font-medium hover:text-white/80 transition-colors">
+              Truth API
             </a>
           </div>
         </div>
@@ -250,6 +253,9 @@ function HomePage() {
             </a>
             <a href="/how-it-works" className="text-white text-lg font-medium hover:text-white/80 transition-colors">
               How it works
+            </a>
+            <a href="/how-it-works?chapter=truth-api" className="text-white text-lg font-medium hover:text-white/80 transition-colors">
+              Truth API
             </a>
           </div>
           
